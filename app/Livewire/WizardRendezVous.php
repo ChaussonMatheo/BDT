@@ -27,7 +27,10 @@ class WizardRendezVous extends Component
 
     public $serviceDuration = 30; // Durée en minutes
 
+    public $selectedCarType = null;
+
     protected $rules = [
+        'selectedCarType' => 'required|in:petite_voiture,berline,suv_4x4',
         'selectedService' => 'required|exists:prestations,id',
         'selectedDate' => 'required|date',
         'selectedTime' => 'required',
@@ -36,6 +39,12 @@ class WizardRendezVous extends Component
     public function mount()
     {
         $this->generateAvailableDays();
+    }
+
+    public function selectCarType($carType)
+    {
+        $this->selectedCarType = $carType;
+        $this->resetValidation();
     }
 
     public function selectService($serviceId)
@@ -161,18 +170,19 @@ class WizardRendezVous extends Component
 
 
 
+
     public function nextStep()
     {
         if ($this->step === 1) {
+            $this->validateOnly('selectedCarType');
+        } elseif ($this->step === 2) {
             $this->validateOnly('selectedService');
-        }
-
-        if ($this->step === 2) {
+        } elseif ($this->step === 3) {
             $this->validateOnly('selectedDate');
             $this->validateOnly('selectedTime');
         }
 
-        if ($this->step < 3) {
+        if ($this->step < 4) {
             $this->step++;
         }
     }
@@ -197,10 +207,13 @@ class WizardRendezVous extends Component
             'selectedService' => 'required|exists:prestations,id',
             'selectedDate' => 'required|date',
             'selectedTime' => 'required',
+            'selectedCarType' => 'required|in:petite_voiture,berline,suv_4x4', // Ajout du type de voiture
             'guest_name' => $user ? 'nullable' : 'required|string|max:255',
             'guest_email' => $user ? 'nullable' : 'required|email|max:255',
             'guest_phone' => $user ? 'nullable' : 'required|string|max:20',
         ]);
+        $prestation = Prestation::findOrFail($this->selectedService);
+
 
         // Création du rendez-vous
         $rendezVous = RendezVous::create([
@@ -211,8 +224,13 @@ class WizardRendezVous extends Component
             'guest_email' => $user ? null : $this->guest_email,
             'guest_phone' => $user ? null : $this->guest_phone,
             'statut' => 'en attente',
+            'tarif' => match ($this->selectedCarType) {
+                'petite_voiture' => optional(Prestation::find($this->selectedService))->tarif_petite_voiture,
+                'berline' => optional(Prestation::find($this->selectedService))->tarif_berline,
+                'suv_4x4' => optional(Prestation::find($this->selectedService))->tarif_suv_4x4,
+            },
+            'type_de_voiture' => $this->selectedCarType,
         ]);
-
         // Envoi de l'email de confirmation
         try {
             if ($user) {

@@ -21,6 +21,8 @@ class RendezVous extends Model
         'guest_name',
         'guest_email',
         'guest_phone',
+        'tarif',
+        'type_de_voiture',
     ];
 
     protected $dates = ['date_heure'];

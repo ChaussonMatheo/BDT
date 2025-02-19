@@ -7,20 +7,69 @@
 
             <!-- Indicateur de progression -->
             <div class="steps mb-6">
-                <div class="step {{ $step >= 1 ? 'step-primary' : '' }}">Service</div>
-                <div class="step {{ $step >= 2 ? 'step-primary' : '' }}">Date & Heure</div>
-                <div class="step {{ $step >= 3 ? 'step-primary' : '' }}">Validation</div>
+                <div class="step {{ $step >= 1 ? 'step-primary' : '' }}">Véhicule</div>
+                <div class="step {{ $step >= 2 ? 'step-primary' : '' }}">Service</div>
+                <div class="step {{ $step >= 3 ? 'step-primary' : '' }}">Date & Heure</div>
+                <div class="step {{ $step >= 4 ? 'step-primary' : '' }}">Validation</div>
             </div>
+            @if($step === 1)
+                <h3 class="text-lg font-semibold mb-4">Choisissez votre type de véhicule :</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedCarType == 'petite_voiture' ? 'border-blue-500' : '' }}">
+                        <div class="card-body flex flex-col items-center">
+                            <i class="fas fa-car-side text-4xl text-blue-500"></i>
+                            <h4 class="text-lg font-semibold text-gray-800">Petite Voiture</h4>
+                            <button wire:click="selectCarType('petite_voiture')" class="btn btn-primary w-full mt-3">
+                                @if($selectedCarType == 'petite_voiture') ✅ Sélectionné @else Sélectionner @endif
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedCarType == 'berline' ? 'border-blue-500' : '' }}">
+                        <div class="card-body flex flex-col items-center">
+                            <i class="fas fa-car text-4xl text-green-500"></i>
+                            <h4 class="text-lg font-semibold text-gray-800">Berline</h4>
+                            <button wire:click="selectCarType('berline')" class="btn btn-primary w-full mt-3">
+                                @if($selectedCarType == 'berline') ✅ Sélectionné @else Sélectionner @endif
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedCarType == 'suv_4x4' ? 'border-blue-500' : '' }}">
+                        <div class="card-body flex flex-col items-center">
+                            <i class="fas fa-truck-monster text-4xl text-red-500"></i>
+                            <h4 class="text-lg font-semibold text-gray-800">SUV / 4x4</h4>
+                            <button wire:click="selectCarType('suv_4x4')" class="btn btn-primary w-full mt-3">
+                                @if($selectedCarType == 'suv_4x4') ✅ Sélectionné @else Sélectionner @endif
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button wire:click.prevent="nextStep"
+                        class="btn btn-primary mt-6 w-full"
+                        @if(!$selectedCarType) disabled @endif>
+                    Suivant
+                </button>
+            @endif
 
             <!-- Étape 1 : Sélection du service -->
-            @if($step === 1)
+            @if($step === 2)
                 <h3 class="text-lg font-semibold mb-4">Choisissez un service :</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($prestations as $prestation)
                         <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedService == $prestation->id ? 'border-blue-500' : '' }}">
                             <h4 class="text-lg font-semibold text-gray-800">{{ $prestation->service }}</h4>
                             <p class="text-gray-600 text-sm">{{ $prestation->description }}</p>
-                            <p class="text-gray-800 font-semibold mt-2">Tarif : {{ $prestation->tarif_petite_voiture }}€</p>
+                            <p class="text-gray-800 font-semibold mt-2">
+                                Tarif :
+                                {{ match ($selectedCarType) {
+                                    'petite_voiture' => $prestation->tarif_petite_voiture,
+                                    'berline' => $prestation->tarif_berline,
+                                    'suv_4x4' => $prestation->tarif_suv_4x4,
+                                    }
+                                }}€
+                            </p>
 
                             <button wire:click="selectService({{ $prestation->id }})"
                                     class="btn btn-primary w-full mt-3">
@@ -42,7 +91,7 @@
             @endif
 
             <!-- Étape 2 : Sélection du jour et créneau -->
-            @if($step === 2)
+            @if($step === 3)
                 <h3 class="text-lg font-semibold mb-4">Choisissez un jour :</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     @foreach($availableDays as $day)
@@ -77,7 +126,7 @@
                 </div>
             @endif
 
-            @if($step === 3)
+            @if($step === 4)
                 <div class="card bg-base-100 p-6">
                     <div class="card-body">
 
