@@ -1,10 +1,11 @@
 <?php
-
 namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Prestation;
 use App\Models\RendezVous;
+use App\Models\Availability;
+use App\Models\Holiday;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,10 @@ class WizardRendezVous extends Component
     public $timeSlots = [];
     public $availableDays = [];
 
+    public $availableSlots = []; // Liste des créneaux disponibles
+
+    public $serviceDuration = 30; // Durée en minutes
+
     protected $rules = [
         'selectedService' => 'required|exists:prestations,id',
         'selectedDate' => 'required|date',
@@ -25,7 +30,7 @@ class WizardRendezVous extends Component
 
     public function mount()
     {
-        $this->generateDays();
+        $this->generateAvailableDays();
     }
 
     public function selectService($serviceId)
@@ -47,29 +52,109 @@ class WizardRendezVous extends Component
         $this->resetValidation();
     }
 
-    public function generateDays()
+    /**
+     * Génère la liste des jours où au moins un garage est ouvert.
+     */
+    public function generateAvailableDays()
     {
         $this->availableDays = [];
+
+        // Tableau de conversion EN -> FR
+        $joursEnToFr = [
+            'monday'    => 'lundi',
+            'tuesday'   => 'mardi',
+            'wednesday' => 'mercredi',
+            'thursday'  => 'jeudi',
+            'friday'    => 'vendredi',
+            'saturday'  => 'samedi',
+            'sunday'    => 'dimanche',
+        ];
+
         for ($i = 0; $i < 14; $i++) {
             $date = Carbon::now()->addDays($i);
-            $this->availableDays[] = [
-                'formatted' => $date->translatedFormat('l d F'),
-                'value' => $date->toDateString(),
-            ];
+            $dayOfWeekEn = strtolower($date->format('l')); // Jour en anglais
+
+            // Conversion en français
+            $dayOfWeekFr = $joursEnToFr[$dayOfWeekEn] ?? null;
+
+            if (!$dayOfWeekFr) {
+                continue; // S'il n'existe pas, on ignore
+            }
+
+            // Vérifier si c'est un jour férié
+            $isHoliday = Holiday::whereDate('date', $date)->exists();
+
+            // Vérifier si une disponibilité existe pour ce jour
+            $availabilities = Availability::where('day_of_week', $dayOfWeekFr)
+                ->where('is_closed', false)
+                ->get();
+
+            if (!$isHoliday && $availabilities->isNotEmpty()) {
+                $this->availableDays[] = [
+                    'formatted' => $date->translatedFormat('l d F'),
+                    'value' => $date->toDateString(),
+                ];
+            }
         }
     }
 
+
+
+    /**
+     * Génère les créneaux horaires disponibles en fonction des disponibilités et des rendez-vous existants.
+     */
     public function generateTimeSlots()
     {
-        $this->timeSlots = [];
-        $startTime = Carbon::createFromTime(9, 0);
-        $endTime = Carbon::createFromTime(17, 0);
+        $this->availableSlots = []; // Réinitialisation
+        if (!$this->selectedDate) return;
 
-        while ($startTime < $endTime) {
-            $this->timeSlots[] = $startTime->format('H:i');
-            $startTime->addMinutes(30);
+        $dayOfWeekEn = strtolower(Carbon::parse($this->selectedDate)->format('l'));
+
+        // Tableau de conversion EN -> FR
+        $joursEnToFr = [
+            'monday'    => 'lundi',
+            'tuesday'   => 'mardi',
+            'wednesday' => 'mercredi',
+            'thursday'  => 'jeudi',
+            'friday'    => 'vendredi',
+            'saturday'  => 'samedi',
+            'sunday'    => 'dimanche',
+        ];
+
+        // Convertir en français
+        $dayOfWeekFr = $joursEnToFr[$dayOfWeekEn] ?? null;
+        if (!$dayOfWeekFr) {
+            return;
         }
+
+        // Récupérer les disponibilités pour ce jour
+        $availabilities = Availability::where('day_of_week', $dayOfWeekFr)
+            ->where('is_closed', false)
+            ->get();
+
+        $slots = [];
+        foreach ($availabilities as $availability) {
+            $startTime = Carbon::parse($availability->start_time);
+            $endTime = Carbon::parse($availability->end_time);
+
+            while ($startTime->addMinutes($this->serviceDuration)->lte($endTime)) {
+                $slot = $startTime->format('H:i');
+
+                // Vérifier si ce créneau est déjà réservé
+                $isBooked = RendezVous::where('date_heure', $this->selectedDate . ' ' . $slot)
+                    ->exists();
+
+                if (!$isBooked) {
+                    $slots[] = $slot;
+                }
+            }
+        }
+
+        $this->availableSlots = $slots;
+
     }
+
+
 
     public function nextStep()
     {
@@ -94,19 +179,38 @@ class WizardRendezVous extends Component
         }
     }
 
+    public $guest_name;
+    public $guest_email;
+    public $guest_phone;
+
     public function saveRendezVous()
     {
-        $this->validate();
+        $user = Auth::user();
 
-        RendezVous::create([
-            'prestation_id' => $this->selectedService,
-            'date_heure' => Carbon::parse($this->selectedDate . ' ' . $this->selectedTime),
-            'statut' => 'en attente',
-            'garage_id' => null,
-            'user_id' => Auth::id(),
+        // Validation
+        $this->validate([
+            'selectedService' => 'required|exists:prestations,id',
+            'selectedDate' => 'required|date',
+            'selectedTime' => 'required',
+            'guest_name' => $user ? 'nullable' : 'required|string|max:255',
+            'guest_email' => $user ? 'nullable' : 'required|email|max:255',
+            'guest_phone' => $user ? 'nullable' : 'required|string|max:20',
         ]);
 
-        return redirect()->route('rendezvous.index')->with('success', 'Rendez-vous réservé avec succès.');
+        // Création du rendez-vous
+        RendezVous::create([
+            'user_id' => $user ? $user->id : null,
+            'prestation_id' => $this->selectedService,
+            'date_heure' => Carbon::parse($this->selectedDate . ' ' . $this->selectedTime),
+            'guest_name' => $user ? null : $this->guest_name,
+            'guest_email' => $user ? null : $this->guest_email,
+            'guest_phone' => $user ? null : $this->guest_phone,
+            'statut' => 'en attente',
+        ]);
+
+        session()->flash('success', 'Rendez-vous enregistré avec succès.');
+
+        return redirect()->route('rendezvous.index');
     }
 
     public function render()

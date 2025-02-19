@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\Garage;
@@ -16,7 +15,7 @@ class GarageController extends Controller
 
     public function create()
     {
-        $users = \App\Models\User::all(); // Récupérer tous les utilisateurs
+        $users = \App\Models\User::all();
         return view('garages.create', compact('users'));
     }
 
@@ -30,12 +29,16 @@ class GarageController extends Controller
         ]);
 
         Garage::create($request->all());
-        return redirect()->route('garages.index')->with('success', 'Garage ajouté avec succès.');
+
+        return redirect()->route('garages.index')->with('toast', [
+            'message' => 'Garage ajouté avec succès.',
+            'type' => 'success'
+        ]);
     }
 
     public function edit(Garage $garage)
     {
-        $users = \App\Models\User::all(); // Récupérer tous les utilisateurs
+        $users = \App\Models\User::all();
         return view('garages.edit', compact('garage', 'users'));
     }
 
@@ -48,12 +51,20 @@ class GarageController extends Controller
         ]);
 
         $garage->update($request->all());
-        return redirect()->route('garages.index')->with('success', 'Garage mis à jour.');
+
+        return redirect()->route('garages.index')->with('toast', [
+            'message' => 'Garage mis à jour.',
+            'type' => 'info'
+        ]);
     }
 
     public function destroy(Garage $garage)
     {
         $garage->delete();
-        return redirect()->route('garages.index')->with('success', 'Garage supprimé.');
+
+        return redirect()->route('garages.index')->with('toast', [
+            'message' => 'Garage supprimé.',
+            'type' => 'error'
+        ]);
     }
 }

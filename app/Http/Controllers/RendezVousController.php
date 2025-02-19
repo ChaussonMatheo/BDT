@@ -5,15 +5,29 @@ use App\Models\RendezVous;
 use App\Models\Garage;
 use App\Models\Prestation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+
 
 class RendezVousController extends Controller
 {
     public function index()
     {
-        $rendezVous = RendezVous::orderBy('date_heure', 'asc')->get();
+        if (Auth::user()->role === 'admin') {
+            // L'admin voit tous les rendez-vous
+            $rendezVous = RendezVous::with(['user', 'prestation'])->orderBy('date_heure', 'asc')->get();
+        } else {
+            // Un utilisateur normal voit uniquement ses rendez-vous
+            $rendezVous = RendezVous::where('user_id', Auth::id())
+                ->with(['prestation'])
+                ->orderBy('date_heure', 'asc')
+                ->get();
+        }
+
         return view('rendezvous.index', compact('rendezVous'));
     }
+
 
     public function create()
     {
@@ -28,14 +42,31 @@ class RendezVousController extends Controller
             'date_heure' => 'required|date',
             'garage_id' => 'nullable|exists:garages,id',
             'prestation_id' => 'nullable|exists:prestations,id',
+            'guest_name' => 'nullable|string|max:255',
+            'guest_email' => 'nullable|email|max:255',
+            'guest_phone' => 'nullable|string|max:20',
             'statut' => 'required|in:en attente,confirmé,annulé',
         ]);
 
-        // Créer le rendez-vous
-        $rendezVous = RendezVous::create($request->all());
+        $user = Auth::user();
 
-        // Générer un événement dans le planning
-        event(new \App\Events\RendezVousCreated($rendezVous));
+        // Créer le rendez-vous
+        $rendezVous = RendezVous::create([
+            'user_id' => $user ? $user->id : null,
+            'guest_name' => $user ? null : $request->guest_name,
+            'guest_email' => $user ? null : $request->guest_email,
+            'guest_phone' => $user ? null : $request->guest_phone,
+            'garage_id' => $request->garage_id,
+            'prestation_id' => $request->prestation_id,
+            'date_heure' => $request->date_heure,
+            'statut' => $request->statut,
+        ]);
+
+        if (Auth::check()) {
+            Mail::to(Auth::user()->email)->send(new RendezVousConfirmation($rendezVous));
+        } elseif ($request->has('email')) {
+            Mail::to($request->email)->send(new RendezVousConfirmation($rendezVous));
+        }
 
         return redirect()->route('rendezvous.index')->with('success', 'Rendez-vous ajouté avec succès.');
     }
@@ -90,5 +121,24 @@ class RendezVousController extends Controller
 
         return redirect()->route('rendezvous.index')->with('success', 'Le rendez-vous a été supprimé avec succès.');
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'statut' => 'required|in:en attente,confirmé,annulé,refusé',
+        ]);
+
+        $rendezVous = RendezVous::findOrFail($id);
+        $rendezVous->statut = $request->statut;
+        $rendezVous->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statut mis à jour avec succès.',
+            'statut' => $rendezVous->statut // Retourne le nouveau statut
+        ]);
+    }
+
+
 
 }

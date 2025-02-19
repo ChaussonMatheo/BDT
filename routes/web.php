@@ -9,6 +9,8 @@ use App\Http\Controllers\PrestationController;
 use App\Http\Controllers\GarageController;
 use App\Http\Controllers\RendezVousController;
 use App\Livewire\WizardRendezVous;
+use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\DashboardController;
 use Livewire\Livewire;
 
 /*
@@ -45,6 +47,42 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::resource('rendezvous', RendezVousController::class);
+Route::post('/rendezvous/{id}/update-status', [RendezVousController::class, 'updateStatus'])->name('rendezvous.updateStatus');
+
+
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+
+
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/availabilities', [AvailabilityController::class, 'index'])->name('availabilities.index');
+    Route::get('/availabilities/create', [AvailabilityController::class, 'create'])->name('availabilities.create');
+    Route::post('/availabilities', [AvailabilityController::class, 'store'])->name('availabilities.store');
+    Route::get('/availabilities/{availability}/edit', [AvailabilityController::class, 'edit'])->name('availabilities.edit');
+    Route::put('/availabilities/{availability}', [AvailabilityController::class, 'update'])->name('availabilities.update');
+    Route::delete('/availabilities/{availability}', [AvailabilityController::class, 'destroy'])->name('availabilities.destroy');
+});
+
+
+Route::get('/test-env', function () {
+    return response()->json([
+        'TWILIO_SID' => env('TWILIO_SID'),
+        'TWILIO_AUTH_TOKEN' => env('TWILIO_AUTH_TOKEN'),
+        'TWILIO_PHONE_NUMBER' => env('TWILIO_PHONE_NUMBER'),
+    ]);
+});
+
+
+
+Route::get('/test-toast-error', function () {
+    return redirect('/')->with('error', 'Martin, tu lis stp');
+});
+Route::get('/test-toast', function () {
+    return redirect('/')->with('success', 'Un nouveau garage a été ajouté !');
+});
+
+
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users', [AdminController::class, 'index'])->name('admin.users');
@@ -55,9 +93,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -17,6 +17,9 @@ class RendezVous extends Model
         'statut',
         'garage_id',
         'user_id',
+        'guest_name',
+        'guest_email',
+        'guest_phone',
     ];
 
     protected $dates = ['date_heure'];

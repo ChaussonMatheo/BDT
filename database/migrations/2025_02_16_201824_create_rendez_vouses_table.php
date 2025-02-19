@@ -9,7 +9,10 @@ return new class extends Migration {
     {
         Schema::create('rendez_vous', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // 🔗 Associe le rendez-vous à l'utilisateur
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade'); // Si connecté
+            $table->string('guest_name')->nullable(); // Pour les invités
+            $table->string('guest_email')->nullable();
+            $table->string('guest_phone')->nullable();
             $table->foreignId('garage_id')->nullable()->constrained()->onDelete('cascade'); // 🔗 Associe à un garage (si pro)
             $table->foreignId('prestation_id')->nullable()->constrained()->onDelete('cascade'); // 🔗 Associe à une prestation (si particulier)
             $table->dateTime('date_heure'); // 🕒 Date et heure du rendez-vous
