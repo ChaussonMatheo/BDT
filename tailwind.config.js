@@ -20,6 +20,6 @@ export default {
 
     plugins: [forms, daisyui],
     daisyui: {
-        themes: ["light"], // On force le mode "light"
+        themes: ["emerald"], // On force le mode "light"
     },
 };

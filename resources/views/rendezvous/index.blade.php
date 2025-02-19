@@ -39,19 +39,29 @@
 
                             <p class="text-gray-600 text-sm flex items-center">
                                 <i class="fas fa-envelope text-blue-500 mr-2"></i>
-                                <span class="font-medium">Email :</span>
+                                <span class="font-medium">Email : </span>
                                 @if($rdv->user)
                                     {{ $rdv->user->email }}
                                 @else
                                     {{ $rdv->guest_email ?? 'Non renseigné' }}
                                 @endif
                             </p>
+                            <p class="text-gray-600 text-sm flex items-center">
+                                <i class="fas fa-phone text-blue-500 mr-2"></i>
+                                <span class="font-medium">Téléphone : &#8201; </span>
+                                @if($rdv->user)
+                                    {{ $rdv->user->phone }}
+                                @else
+                                    {{ $rdv->guest_phone ?? 'Non renseigné' }}
+                                @endif
+                            </p>
+
 
                             <!-- Affichage du service -->
                             @if($rdv->prestation)
                                 <p class="text-gray-600 text-sm flex items-center">
                                     <i class="fas fa-tools text-green-500 mr-2"></i>
-                                    <span class="font-medium">Service :</span> {{ $rdv->prestation->service }}
+                                    <span class="font-medium">Service : </span> {{ $rdv->prestation->service }}
                                 </p>
                             @endif
 
