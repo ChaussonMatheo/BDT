@@ -156,6 +156,13 @@ class RendezVousController extends Controller
         ]);
     }
 
+    public function show($token)
+    {
+        $rendezVous = RendezVous::where('token', $token)->firstOrFail();
+
+        return view('rendezvous.manage', compact('rendezVous'));
+    }
+
 
 
 }

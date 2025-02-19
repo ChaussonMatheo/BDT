@@ -11,6 +11,7 @@ use App\Http\Controllers\RendezVousController;
 use App\Livewire\WizardRendezVous;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\DashboardController;
+use App\Models\RendezVous;
 use Livewire\Livewire;
 
 /*
@@ -48,7 +49,10 @@ Route::middleware(['auth'])->group(function () {
 
 Route::resource('rendezvous', RendezVousController::class);
 Route::post('/rendezvous/{id}/update-status', [RendezVousController::class, 'updateStatus'])->name('rendezvous.updateStatus');
-
+Route::get('/rendezvous/{token}', function ($token) {
+    $rendezVous = RendezVous::where('token', $token)->firstOrFail();
+    return view('rendezvous.manage', compact('rendezVous'));
+})->name('rendezvous.manage');
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');

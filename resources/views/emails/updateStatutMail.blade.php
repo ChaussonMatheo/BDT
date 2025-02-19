@@ -37,10 +37,9 @@
             <li><strong>Nouveau statut :</strong> {{ ucfirst($rendezVous->statut) }}</li>
         </ul>
 
-        <p>Vous pouvez consulter votre rendez-vous via le lien ci-dessous :</p>
+        <p>Vous pouvez gérer votre rendez-vous en cliquant sur le bouton ci-dessous :</p>
 
-        <!-- BOUTON ACCÈS À L'APP -->
-        <a href="{{ url('/dashboard') }}" class="btn">Voir mon rendez-vous</a>
+        <a href="{{ $manageUrl }}" class="btn">Gérer mon rendez-vous</a>
 
         <p>Si vous avez des questions, n’hésitez pas à nous contacter.</p>
 
