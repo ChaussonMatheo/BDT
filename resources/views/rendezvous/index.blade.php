@@ -86,7 +86,7 @@
                                 </div>
 
                                 <!-- Bouton Supprimer avec uniquement l'icône -->
-                                <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="POST">
+                                <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="DELETE">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-ghost btn-sm mt-6 text-red-500 hover:text-red-700"

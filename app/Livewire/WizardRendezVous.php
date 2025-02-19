@@ -6,8 +6,13 @@ use App\Models\Prestation;
 use App\Models\RendezVous;
 use App\Models\Availability;
 use App\Models\Holiday;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\RendezVousConfirmation;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+
 
 class WizardRendezVous extends Component
 {
@@ -187,7 +192,7 @@ class WizardRendezVous extends Component
     {
         $user = Auth::user();
 
-        // Validation
+        // Validation des champs
         $this->validate([
             'selectedService' => 'required|exists:prestations,id',
             'selectedDate' => 'required|date',
@@ -198,7 +203,7 @@ class WizardRendezVous extends Component
         ]);
 
         // Création du rendez-vous
-        RendezVous::create([
+        $rendezVous = RendezVous::create([
             'user_id' => $user ? $user->id : null,
             'prestation_id' => $this->selectedService,
             'date_heure' => Carbon::parse($this->selectedDate . ' ' . $this->selectedTime),
@@ -208,10 +213,28 @@ class WizardRendezVous extends Component
             'statut' => 'en attente',
         ]);
 
-        session()->flash('success', 'Rendez-vous enregistré avec succès.');
+        // Envoi de l'email de confirmation
+        try {
+            if ($user) {
+                Mail::to($user->email)->send(new RendezVousConfirmation($rendezVous));
+                $message = "Un email de confirmation a été envoyé à : " . $user->email;
+            } elseif ($rendezVous->guest_email) {
+                Mail::to($rendezVous->guest_email)->send(new RendezVousConfirmation($rendezVous));
+                $message = "Un email de confirmation a été envoyé à : " . $rendezVous->guest_email;
+            } else {
+                $message = "Aucun email à envoyer.";
+            }
+        } catch (\Exception $e) {
+            $message = "Erreur lors de l'envoi de l'email : " . $e->getMessage();
+        }
 
+        // Flash message pour l'utilisateur avec debug info
+        session()->flash('success', 'Rendez-vous enregistré avec succès. ' . $message);
+
+        // Redirection vers la liste des rendez-vous
         return redirect()->route('rendezvous.index');
     }
+
 
     public function render()
     {

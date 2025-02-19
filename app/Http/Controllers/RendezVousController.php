@@ -1,13 +1,17 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Mail\RendezVousConfirmation;
 use App\Models\RendezVous;
 use App\Models\Garage;
 use App\Models\Prestation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Mail\UpdateStatutMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
 
 
 class RendezVousController extends Controller
@@ -62,14 +66,12 @@ class RendezVousController extends Controller
             'statut' => $request->statut,
         ]);
 
-        if (Auth::check()) {
-            Mail::to(Auth::user()->email)->send(new RendezVousConfirmation($rendezVous));
-        } elseif ($request->has('email')) {
-            Mail::to($request->email)->send(new RendezVousConfirmation($rendezVous));
-        }
 
-        return redirect()->route('rendezvous.index')->with('success', 'Rendez-vous ajouté avec succès.');
+
+
+
     }
+
     public function edit(RendezVous $rendezVous)
     {
         $prestations = Prestation::all();
@@ -129,12 +131,27 @@ class RendezVousController extends Controller
         ]);
 
         $rendezVous = RendezVous::findOrFail($id);
+        $oldStatus = $rendezVous->statut; // Sauvegarde l'ancien statut
         $rendezVous->statut = $request->statut;
         $rendezVous->save();
 
+        // Vérifier si le rendez-vous a un utilisateur ou un invité
+        $email = $rendezVous->user ? $rendezVous->user->email : $rendezVous->guest_email;
+
+        if ($email) {
+            try {
+                Mail::to($email)->send(new UpdateStatutMail($rendezVous, $oldStatus));
+                $message = "Un email a été envoyé au client à l'adresse $email.";
+            } catch (\Exception $e) {
+                $message = "Erreur lors de l'envoi de l'email : " . $e->getMessage();
+            }
+        } else {
+            $message = "Aucun email trouvé pour envoyer la notification.";
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Statut mis à jour avec succès.',
+            'message' => 'Statut mis à jour avec succès. ' . $message,
             'statut' => $rendezVous->statut // Retourne le nouveau statut
         ]);
     }
