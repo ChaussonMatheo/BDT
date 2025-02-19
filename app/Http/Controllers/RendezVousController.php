@@ -156,6 +156,23 @@ class RendezVousController extends Controller
         ]);
     }
 
+    public function showwithid($id)
+    {
+        // Récupérer le rendez-vous avec les relations nécessaires
+        $rendezVous = RendezVous::with('prestation', 'user')->findOrFail($id);
+
+        return response()->json([
+            'id' => $rendezVous->id,
+            'date_heure' => \Carbon\Carbon::parse($rendezVous->date_heure)->format('d/m/Y H:i'),
+            'prestation' => [
+                'service' => $rendezVous->prestation->service ?? 'Non spécifié'
+            ],
+            'type_de_voiture' => $rendezVous->type_de_voiture ?? 'Non spécifié',
+            'tarif' => $rendezVous->tarif ?? 'Non renseigné',
+            'statut' => ucfirst($rendezVous->statut),
+        ]);
+    }
+
     public function show($token)
     {
         $rendezVous = RendezVous::where('token', $token)->firstOrFail();

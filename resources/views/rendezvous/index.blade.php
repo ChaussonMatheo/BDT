@@ -1,117 +1,291 @@
 <x-app-layout>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
         @if(Auth::user()->role === 'admin')
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 flex items-center">
-                <i class="fas fa-calendar-alt mr-2"></i> Liste des Rendez-Vous
-            </h2>
+            <div class="breadcrumbs text-sm">
+                <ul>
+                    <li>Rendez-Vous</li>
+                    <li>Liste</li>
+                </ul>
+            </div>
+            <div class="divider"></div>
         @else
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 flex items-center">
-                <i class="fas fa-calendar-alt mr-2"></i> Mes Rendez-vous
+                 Mes Rendez-vous
             </h2>
         @endif
 
         @if($rendezVous->isEmpty())
             <p class="text-gray-600 text-center">Aucun rendez-vous trouvé.</p>
         @else
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($rendezVous as $index => $rdv)
-                    <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
-                        <!-- En-tête : Numéro du rendez-vous + Date -->
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                                <i class="fas fa-hashtag text-gray-500 mr-2"></i>
-                                {{ $index + 1 }} - {{ \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') }}
-                            </h3>
-                        </div>
+                <div role="tablist" class="tabs tabs-boxed mb-6 tabs-xl w-1/3">
+                    <a role="tab" onclick="switchTab('upcoming')" class="tab tab-active">📅 À venir</a>
+                    <a role="tab" onclick="switchTab('past')" class="tab">📜 Passés</a>
+                </div>
+                <!-- Début section des rendez-vous à venir -->
+                <div id="upcoming" class="rendezvous-list">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @foreach ($rendezVous->where('date_heure', '>=', now()) as $index => $rdv)
+                            <!-- Début carte rendez-vous -->
+                            <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
+                                <!-- En-tête : Numéro du rendez-vous + Date -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                        <i class="fas fa-hashtag text-gray-500 mr-2"></i>
+                                        {{ $index + 1 }} - {{ \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') }}
+                                    </h3>
 
-                        <!-- Détails du rendez-vous -->
-                        <div class="space-y-2">
-                            <!-- Affichage du nom et email du client -->
-                            <p class="text-gray-600 text-sm flex items-center">
-                                <i class="fas fa-user text-purple-500 mr-2"></i>
-                                <span class="font-medium">Client :</span>
-                                @if($rdv->user)
-                                    {{ $rdv->user->name }}
-                                @else
-                                    {{ $rdv->guest_name ?? 'Non renseigné' }}
-                                @endif
-                            </p>
+                                    <!-- Avatar du client en haut à droite -->
+                                    <div class="relative group">
+                                        <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-300 shadow-sm">
+                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($rdv->user ? $rdv->user->name : $rdv->guest_name) }}&background=random&color=fff" alt="Avatar">
+                                        </div>
 
-                            <p class="text-gray-600 text-sm flex items-center">
-                                <i class="fas fa-envelope text-blue-500 mr-2"></i>
-                                <span class="font-medium">Email : </span>
-                                @if($rdv->user)
-                                    {{ $rdv->user->email }}
-                                @else
-                                    {{ $rdv->guest_email ?? 'Non renseigné' }}
-                                @endif
-                            </p>
-                            <p class="text-gray-600 text-sm flex items-center">
-                                <i class="fas fa-phone text-blue-500 mr-2"></i>
-                                <span class="font-medium">Téléphone : &#8201; </span>
-                                @if($rdv->user)
-                                    {{ $rdv->user->phone }}
-                                @else
-                                    {{ $rdv->guest_phone ?? 'Non renseigné' }}
-                                @endif
-                            </p>
-
-
-                            <!-- Affichage du service -->
-                            @if($rdv->prestation)
-                                <p class="text-gray-600 text-sm flex items-center">
-                                    <i class="fas fa-tools text-green-500 mr-2"></i>
-                                    <span class="font-medium">Service : </span> {{ $rdv->prestation->service }}
-                                </p>
-                            @endif
-
-                            <!-- Affichage du statut -->
-                            @if($rdv->statut)
-                                <p class="text-sm flex items-center font-semibold
-                {{ $rdv->statut === 'confirmé' ? 'text-green-600' :
-                   ($rdv->statut === 'annulé' ? 'text-red-600' :
-                   ($rdv->statut === 'refusé' ? 'text-gray-600' : 'text-yellow-600')) }}">
-                                    @if($rdv->statut === 'confirmé')
-                                        ✅ <span class="ml-2">Confirmé</span>
-                                    @elseif($rdv->statut === 'annulé')
-                                        ❌ <span class="ml-2">Annulé</span>
-                                    @else
-                                        ⏳ <span class="ml-2">En attente</span>
-                                    @endif
-                                </p>
-                            @endif
-                        </div>
-
-                        <!-- Sélecteur pour modifier le statut -->
-                        @if(Auth::user()->role === 'admin')
-                            <div class="mt-4 flex items-center justify-between">
-                                <div class="w-full">
-                                    <label class="block text-sm font-medium text-gray-700">Statut :</label>
-                                    <select class="border border-gray-300 p-2 rounded w-full mt-1"
-                                            onchange="changeStatus({{ $rdv->id }}, this.value)">
-                                        <option value="en attente" {{ $rdv->statut == 'en attente' ? 'selected' : '' }}>⏳ En attente</option>
-                                        <option value="confirmé" {{ $rdv->statut == 'confirmé' ? 'selected' : '' }}>✅ Confirmé</option>
-                                        <option value="annulé" {{ $rdv->statut == 'annulé' ? 'selected' : '' }}>❌ Annulé</option>
-                                    </select>
+                                        <!-- Affichage du nom au survol -->
+                                        <div class="absolute top-0 right-12 bg-gray-800 text-white text-sm px-3 py-1 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                            {{ $rdv->user ? $rdv->user->name : $rdv->guest_name }}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Bouton Supprimer avec uniquement l'icône -->
-                                <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="DELETE">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-ghost btn-sm mt-6 text-red-500 hover:text-red-700"
-                                            onclick="return confirm('Supprimer ce rendez-vous ?')">
-                                        <i class="fas fa-trash-alt text-xl"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
+                                <!-- Début des détails du rendez-vous -->
+                                <div class="space-y-2">
+                                    <!-- Informations client -->
+                                    <p class="text-gray-600 text-sm flex items-center">
+                                        <i class="fas fa-user text-purple-500 mr-2"></i>
+                                        <span class="font-medium">Client :</span>
+                                        @if($rdv->user)
+                                            {{ $rdv->user->name }}
+                                        @else
+                                            {{ $rdv->guest_name ?? 'Non renseigné' }}
+                                        @endif
+                                    </p>
 
-            </div>
-        @endif
+                                    <p class="text-gray-600 text-sm flex items-center">
+                                        <i class="fas fa-envelope text-blue-500 mr-2"></i>
+                                        <span class="font-medium">Email : </span>
+                                        @if($rdv->user)
+                                            {{ $rdv->user->email }}
+                                        @else
+                                            {{ $rdv->guest_email ?? 'Non renseigné' }}
+                                        @endif
+                                    </p>
+
+                                    <p class="text-gray-600 text-sm flex items-center">
+                                        <i class="fas fa-phone text-blue-500 mr-2"></i>
+                                        <span class="font-medium">Téléphone : </span>
+                                        @if($rdv->user)
+                                            {{ $rdv->user->phone }}
+                                        @else
+                                            {{ $rdv->guest_phone ?? 'Non renseigné' }}
+                                        @endif
+                                    </p>
+
+                                    <!-- Informations service -->
+                                    @if($rdv->prestation)
+                                        <p class="text-gray-600 text-sm flex items-center">
+                                            <i class="fas fa-tools text-green-500 mr-2"></i>
+                                            <span class="font-medium">Service : </span> {{ $rdv->prestation->service }}
+                                        </p>
+
+                                        <p class="text-gray-600 text-sm flex items-center">
+                                            @php
+                                                $icons = [
+                                                    'petite_voiture' => ['icon' => 'fa-car-side', 'color' => 'text-blue-500', 'label' => 'Petite voiture'],
+                                                    'berline' => ['icon' => 'fa-car', 'color' => 'text-indigo-500', 'label' => 'Berline'],
+                                                    'suv_4x4' => ['icon' => 'fa-truck-monster', 'color' => 'text-red-500', 'label' => 'SUV / 4x4'],
+                                                ];
+                                                $type = $icons[$rdv->type_de_voiture] ?? ['icon' => 'fa-car', 'color' => 'text-gray-500', 'label' => 'Non spécifié'];
+                                            @endphp
+
+                                            <i class="fas {{ $type['icon'] }} {{ $type['color'] }} mr-2 text-lg"></i>
+                                            <span class="font-medium">Type de véhicule :</span>
+                                            <span class="{{ $type['color'] }} font-semibold ml-1">{{ $type['label'] }}</span>
+                                        </p>
+
+                                        <p class="text-gray-600 text-sm flex items-center">
+                                            <i class="fas fa-tag text-red-500 mr-2"></i>
+                                            <span class="font-medium">Tarif :</span> {{ $rdv->tarif }} €
+                                        </p>
+                                    @endif
+
+                                    <!-- Statut -->
+                                    @if($rdv->statut)
+                                        <p class="text-sm flex items-center font-semibold
+                                    {{ $rdv->statut === 'confirmé' ? 'text-green-600' :
+                                       ($rdv->statut === 'annulé' ? 'text-red-600' :
+                                       ($rdv->statut === 'refusé' ? 'text-gray-600' : 'text-yellow-600')) }}">
+
+                                            @if($rdv->statut === 'confirmé')
+                                                ✅ <span class="ml-2">Confirmé</span>
+                                            @elseif($rdv->statut === 'annulé')
+                                                ❌ <span class="ml-2">Annulé</span>
+                                            @else
+                                                ⏳ <span class="ml-2">En attente</span>
+                                            @endif
+                                        </p>
+                                    @endif
+
+                                    <!-- Gestion admin -->
+                                    @if(Auth::user()->role === 'admin')
+                                        <div class="mt-4 flex items-center justify-between">
+                                            <div class="w-full">
+                                                <label class="block text-sm font-medium text-gray-700">Statut :</label>
+                                                <select class="border border-gray-300 p-2 rounded w-full mt-1"
+                                                        onchange="changeStatus({{ $rdv->id }}, this.value)">
+                                                    <option value="en attente" {{ $rdv->statut == 'en attente' ? 'selected' : '' }}>⏳ En attente</option>
+                                                    <option value="confirmé" {{ $rdv->statut == 'confirmé' ? 'selected' : '' }}>✅ Confirmé</option>
+                                                    <option value="annulé" {{ $rdv->statut == 'annulé' ? 'selected' : '' }}>❌ Annulé</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Suppression -->
+                                            <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-ghost btn-sm mt-6 text-red-500 hover:text-red-700"
+                                                        onclick="return confirm('Supprimer ce rendez-vous ?')">
+                                                    <i class="fas fa-trash-alt text-xl"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </div>
+                                <!-- Fin des détails du rendez-vous -->
+                            </div>
+                            <!-- Fin carte rendez-vous -->
+                        @endforeach
+                    </div>
+                </div>
+                <!-- Fin section des rendez-vous à venir -->
+                <!-- Début section des rendez-vous passés -->
+                <div id="past" class="rendezvous-list hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @foreach ($rendezVous->where('date_heure', '<', now()) as $index => $rdv)
+                            <!-- Début carte rendez-vous -->
+                            <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
+                                <!-- En-tête : Numéro du rendez-vous + Date -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                        <i class="fas fa-hashtag text-gray-500 mr-2"></i>
+                                        {{ $index + 1 }} - {{ \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') }}
+                                    </h3>
+
+                                    <!-- Avatar du client en haut à droite -->
+                                    <div class="relative group">
+                                        <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-300 shadow-sm">
+                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($rdv->user ? $rdv->user->name : $rdv->guest_name) }}&background=random&color=fff" alt="Avatar">
+                                        </div>
+
+                                        <!-- Affichage du nom au survol -->
+                                        <div class="absolute top-0 right-12 bg-gray-800 text-white text-sm px-3 py-1 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                            {{ $rdv->user ? $rdv->user->name : $rdv->guest_name }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Début des détails du rendez-vous -->
+                                <div class="space-y-2">
+                                    <!-- Informations client -->
+                                    <p class="text-gray-600 text-sm flex items-center">
+                                        <i class="fas fa-user text-purple-500 mr-2"></i>
+                                        <span class="font-medium">Client :</span>
+                                        @if($rdv->user)
+                                            {{ $rdv->user->name }}
+                                        @else
+                                            {{ $rdv->guest_name ?? 'Non renseigné' }}
+                                        @endif
+                                    </p>
+
+                                    <p class="text-gray-600 text-sm flex items-center">
+                                        <i class="fas fa-envelope text-blue-500 mr-2"></i>
+                                        <span class="font-medium">Email : </span>
+                                        @if($rdv->user)
+                                            {{ $rdv->user->email }}
+                                        @else
+                                            {{ $rdv->guest_email ?? 'Non renseigné' }}
+                                        @endif
+                                    </p>
+
+                                    <p class="text-gray-600 text-sm flex items-center">
+                                        <i class="fas fa-phone text-blue-500 mr-2"></i>
+                                        <span class="font-medium">Téléphone : </span>
+                                        @if($rdv->user)
+                                            {{ $rdv->user->phone }}
+                                        @else
+                                            {{ $rdv->guest_phone ?? 'Non renseigné' }}
+                                        @endif
+                                    </p>
+
+                                    <!-- Informations service -->
+                                    @if($rdv->prestation)
+                                        <p class="text-gray-600 text-sm flex items-center">
+                                            <i class="fas fa-tools text-green-500 mr-2"></i>
+                                            <span class="font-medium">Service : </span> {{ $rdv->prestation->service }}
+                                        </p>
+
+                                        <p class="text-gray-600 text-sm flex items-center">
+                                            @php
+                                                $icons = [
+                                                    'petite_voiture' => ['icon' => 'fa-car-side', 'color' => 'text-blue-500', 'label' => 'Petite voiture'],
+                                                    'berline' => ['icon' => 'fa-car', 'color' => 'text-indigo-500', 'label' => 'Berline'],
+                                                    'suv_4x4' => ['icon' => 'fa-truck-monster', 'color' => 'text-red-500', 'label' => 'SUV / 4x4'],
+                                                ];
+                                                $type = $icons[$rdv->type_de_voiture] ?? ['icon' => 'fa-car', 'color' => 'text-gray-500', 'label' => 'Non spécifié'];
+                                            @endphp
+
+                                            <i class="fas {{ $type['icon'] }} {{ $type['color'] }} mr-2 text-lg"></i>
+                                            <span class="font-medium">Type de véhicule :</span>
+                                            <span class="{{ $type['color'] }} font-semibold ml-1">{{ $type['label'] }}</span>
+                                        </p>
+
+                                        <p class="text-gray-600 text-sm flex items-center">
+                                            <i class="fas fa-tag text-red-500 mr-2"></i>
+                                            <span class="font-medium">Tarif :</span> {{ $rdv->tarif }} €
+                                        </p>
+                                    @endif
+
+                                    <!-- Statut -->
+                                    @if($rdv->statut)
+                                        <p class="text-sm flex items-center font-semibold
+                        {{ $rdv->statut === 'confirmé' ? 'text-green-600' :
+                           ($rdv->statut === 'annulé' ? 'text-red-600' :
+                           ($rdv->statut === 'refusé' ? 'text-gray-600' : 'text-yellow-600')) }}">
+
+                                            @if($rdv->statut === 'confirmé')
+                                                ✅ <span class="ml-2">Confirmé</span>
+                                            @elseif($rdv->statut === 'annulé')
+                                                ❌ <span class="ml-2">Annulé</span>
+                                            @else
+                                                ⏳ <span class="ml-2">En attente</span>
+                                            @endif
+                                        </p>
+                                    @endif
+
+                                    <!-- Gestion admin -->
+                                    @if(Auth::user()->role === 'admin')
+                                        <div class="mt-4 flex items-center justify-between">
+
+                                            <!-- Suppression -->
+                                            <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-ghost btn-sm mt-6 text-red-500 hover:text-red-700"
+                                                        onclick="return confirm('Supprimer ce rendez-vous ?')">
+                                                    <i class="fas fa-trash-alt text-xl"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </div>
+                                <!-- Fin des détails du rendez-vous -->
+                            </div>
+                            <!-- Fin carte rendez-vous -->
+                        @endforeach
+                    </div>
+                </div>
+                <!-- Fin section des rendez-vous passés -->
     </div>
+            @endif
     <div id="toast-container" class="fixed bottom-5 right-5 flex flex-col space-y-2 z-50"></div>
 
 </x-app-layout>
@@ -120,6 +294,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script>
+    function switchTab(tab) {
+        // Désactiver toutes les listes
+        document.querySelectorAll('.rendezvous-list').forEach(el => el.classList.add('hidden'));
+
+        // Activer la bonne liste
+        document.getElementById(tab).classList.remove('hidden');
+
+        // Mettre à jour l'onglet actif
+        document.querySelectorAll('.tabs a').forEach(el => el.classList.remove('tab-active'));
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('tab-active');
+    }
+</script>
 
 <script>
     function changeStatus(id, newStatus) {

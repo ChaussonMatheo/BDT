@@ -1,55 +1,83 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-semibold mb-6 text-gray-800 flex items-center">
-            <i class="fas fa-calendar-alt mr-2"></i> Gestion des Disponibilités
+    <div class="max-w-5xl mx-auto py-10 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+            <i class="fas fa-calendar-alt text-primary"></i> Gestion des Disponibilités
         </h2>
 
-        <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
-            <div class="flex justify-between mb-4">
-                <a href="{{ route('availabilities.create') }}" class="btn btn-success">
-                    <i class="fas fa-plus-circle mr-2"></i> Ajouter une disponibilité
-                </a>
-            </div>
+        <!-- Bouton d'ajout -->
+        <div class="flex justify-end mb-6">
+            <a href="{{ route('availabilities.create') }}" class="btn btn-primary flex items-center gap-2">
+                <i class="fas fa-plus-circle"></i> Ajouter une disponibilité
+            </a>
+        </div>
 
-            <table class="w-full border-collapse border border-gray-300">
-                <thead>
-                <tr class="bg-gray-200">
-                    <th class="border p-2">Jour</th>
-                    <th class="border p-2">Heure d'ouverture</th>
-                    <th class="border p-2">Heure de fermeture</th>
-                    <th class="border p-2">Statut</th>
-                    <th class="border p-2">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach ($availabilities as $availability)
-                    <tr class="border">
-                        <td class="border p-2">{{ ucfirst($availability->day_of_week) }}</td>
-                        <td class="border p-2">{{ $availability->start_time }}</td>
-                        <td class="border p-2">{{ $availability->end_time }}</td>
-                        <td class="border p-2">
+        <!-- Grid Layout pour afficher les disponibilités sous forme de cartes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach ($availabilities as $availability)
+                <div class="card bg-white shadow-md rounded-lg border border-gray-200 p-4">
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                         {{ ucfirst($availability->day_of_week) }}
+                    </h3>
+
+                    <p class="text-gray-700 flex items-center gap-2 mt-2">
+                        <i class="fas fa-clock text-yellow-500"></i>
+                        <strong>Horaires :</strong> {{ $availability->start_time }} - {{ $availability->end_time }}
+                    </p>
+
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="flex items-center gap-2">
+                            <!-- Statut avec icône dynamique -->
                             @if ($availability->is_closed)
-                                <span class="text-red-500 font-semibold">Fermé</span>
+                                <span class="badge badge-error flex items-center gap-1">
+                                    <i class="fas fa-times-circle"></i> Fermé
+                                </span>
                             @else
-                                <span class="text-green-500 font-semibold">Ouvert</span>
+                                <span class="badge badge-success flex items-center gap-1">
+                                    <i class="fas fa-check-circle"></i> Ouvert
+                                </span>
                             @endif
-                        </td>
-                        <td class="border p-2 flex space-x-2">
-                            <a href="{{ route('availabilities.edit', $availability) }}" class="btn btn-warning">
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex space-x-2">
+                            <a href="{{ route('availabilities.edit', $availability) }}" class="btn btn-warning btn-sm flex items-center gap-1">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form action="{{ route('availabilities.destroy', $availability) }}" method="POST" onsubmit="return confirm('Supprimer cette disponibilité ?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-error">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
+
+                            <!-- Bouton de suppression avec modal -->
+                            <button onclick="openDeleteModal({{ $availability->id }})"
+                                    class="btn btn-error btn-sm flex items-center gap-1">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
+
+    <!-- Modal de suppression -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg"><i class="fas fa-exclamation-triangle text-red-500"></i> Confirmation</h3>
+            <p class="py-4">Voulez-vous vraiment supprimer cette disponibilité ? Cette action est irréversible.</p>
+            <div class="modal-action">
+                <form id="delete-form" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-error">Oui, Supprimer</button>
+                </form>
+                <label for="delete-modal" class="btn">Annuler</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script pour ouvrir le modal de suppression dynamiquement -->
+    <script>
+        function openDeleteModal(id) {
+            let deleteForm = document.getElementById('delete-form');
+            deleteForm.action = "/availabilities/" + id;
+            document.getElementById('delete-modal').classList.add("modal-open");
+        }
+    </script>
 </x-app-layout>

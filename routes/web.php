@@ -38,24 +38,31 @@ Route::resource('garages', GarageController::class);
 
 Route::resource('prestations', PrestationController::class);
 
-Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');
+
 
 Route::get('/rendezvous/create', WizardRendezVous::class)->middleware('auth')->name('rendezvous.create');
+Route::get('/rendezvous/{id}', [RendezVousController::class, 'showwithid'])->name('rendezvous.show')->middleware('auth');
 Route::delete('/rendezvous/{id}', [RendezVousController::class, 'destroy'])->middleware('auth')->name('rendezvous.destroy');
 Route::middleware(['auth'])->group(function () {
     Route::get('/rendezvous/{rendezVous}/edit', [RendezVousController::class, 'edit'])->name('rendezvous.edit');
     Route::put('/rendezvous/{rendezVous}', [RendezVousController::class, 'update'])->name('rendezvous.update');
+    Route::post('/rendezvous/{id}/update-status', [RendezVousController::class, 'updateStatus'])->name('rendezvous.updateStatus');
+    Route::resource('rendezvous', RendezVousController::class);
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+    Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');
+
+
 });
 
-Route::resource('rendezvous', RendezVousController::class);
-Route::post('/rendezvous/{id}/update-status', [RendezVousController::class, 'updateStatus'])->name('rendezvous.updateStatus');
+
+
 Route::get('/rendezvous/{token}', function ($token) {
     $rendezVous = RendezVous::where('token', $token)->firstOrFail();
     return view('rendezvous.manage', compact('rendezVous'));
 })->name('rendezvous.manage');
 
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+
 
 
 
@@ -68,23 +75,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/availabilities/{availability}', [AvailabilityController::class, 'destroy'])->name('availabilities.destroy');
 });
 
-
-Route::get('/test-env', function () {
-    return response()->json([
-        'TWILIO_SID' => env('TWILIO_SID'),
-        'TWILIO_AUTH_TOKEN' => env('TWILIO_AUTH_TOKEN'),
-        'TWILIO_PHONE_NUMBER' => env('TWILIO_PHONE_NUMBER'),
-    ]);
-});
-
-
-
-Route::get('/test-toast-error', function () {
-    return redirect('/')->with('error', 'Martin, tu lis stp');
-});
-Route::get('/test-toast', function () {
-    return redirect('/')->with('success', 'Un nouveau garage a été ajouté !');
-});
 
 
 
