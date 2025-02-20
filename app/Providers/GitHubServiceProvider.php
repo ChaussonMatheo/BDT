@@ -42,7 +42,7 @@ class GitHubServiceProvider extends ServiceProvider
                         $commitData = $commitResponse->json();
 
                         return [
-                            'last_updated' => $repoData['updated_at'] ?? null, // Stocke la date brute
+                            'last_updated' => $repoData['updated_at'] ?? null, // Stocke la date brute en UTC
                             'last_commit_message' => $commitData['commit']['message'] ?? 'Aucun commit trouvé',
                             'last_commit_url' => $commitData['html_url'] ?? '#',
                         ];

@@ -2,8 +2,8 @@
     <p class="text-sm">
         📅 Dernière mise à jour :
         <strong>
-            @if ($data['last_updated'])
-                {{ \Carbon\Carbon::parse($data['last_updated'])->diffForHumans() }}
+            @if (!empty($data['last_updated']))
+                {{ \Carbon\Carbon::parse($data['last_updated'])->locale('fr')->diffForHumans() }}
             @else
                 Non disponible
             @endif
