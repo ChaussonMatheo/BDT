@@ -1,6 +1,9 @@
 <x-app-layout>
+
     <div class="py-12">
+
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
             <!-- Section Calendrier -->
             <div class="card bg-base-100 shadow-xl p-6">
                 <div class="flex justify-between items-center">

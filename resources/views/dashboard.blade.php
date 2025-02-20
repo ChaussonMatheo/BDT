@@ -1,51 +1,56 @@
 <x-app-layout>
-    <div class="flex h-screen bg-gray-100">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white shadow-md h-full p-6">
-            <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
-            <nav class="mt-6">
-                <a href="/dashboard" class="block py-2 px-4 text-blue-600 font-semibold bg-blue-100 rounded">Accueil</a>
-                <a href="/rendezvous" class="block py-2 px-4 mt-2 text-gray-700 hover:bg-gray-200 rounded">Rendez-vous</a>
-                <a href="/utilisateurs" class="block py-2 px-4 mt-2 text-gray-700 hover:bg-gray-200 rounded">Utilisateurs</a>
-            </nav>
-        </aside>
+    <div class="flex flex-col min-h-screen bg-gray-100 p-6">
 
-        <!-- Main Content -->
-        <main class="flex-1 p-6 overflow-y-auto">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-semibold">Statistiques</h1>
-                <button class="btn btn-primary">Rafraîchir</button>
+        <!-- Header -->
+        <x-page-title title="Tableau de Bord" breadcrumb="Tableau de Bord" />
+
+
+        <!-- Stats Cards -->
+        <div class="stats shadow w-full grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="stat">
+                <div class="stat-figure text-primary">
+                    <i class="fas fa-calendar-check text-4xl"></i>
+                </div>
+                <div class="stat-title">Total Rendez-vous</div>
+                <div class="stat-value text-primary">{{ $totalRendezVous }}</div>
+                <div class="stat-desc">Tous les rendez-vous enregistrés</div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-                <div class="bg-white p-4 rounded shadow-md">
-                    <h3 class="text-lg font-semibold">Total Rendez-vous</h3>
-                    <p class="text-2xl font-bold">{{ $totalRendezVous }}</p>
+            <div class="stat">
+                <div class="stat-figure text-green-500">
+                    <i class="fas fa-check-circle text-4xl"></i>
                 </div>
-                <div class="bg-green-100 p-4 rounded shadow-md">
-                    <h3 class="text-lg font-semibold">Confirmés</h3>
-                    <p class="text-2xl font-bold">{{ $confirmedRendezVous }}</p>
-                </div>
-                <div class="bg-red-100 p-4 rounded shadow-md">
-                    <h3 class="text-lg font-semibold">Annulés</h3>
-                    <p class="text-2xl font-bold">{{ $cancelledRendezVous }}</p>
-                </div>
-                <div class="bg-yellow-100 p-4 rounded shadow-md">
-                    <h3 class="text-lg font-semibold">Cette semaine</h3>
-                    <p class="text-2xl font-bold">{{ $rendezVousLastWeek }}</p>
-                </div>
+                <div class="stat-title">Confirmés</div>
+                <div class="stat-value text-green-500">{{ $confirmedRendezVous }}</div>
+                <div class="stat-desc">Rendez-vous validés</div>
             </div>
 
-            <!-- Chart -->
-            <div class="bg-white p-6 rounded shadow-md mt-6">
-                <h3 class="text-xl font-semibold">Évolution des rendez-vous</h3>
-                <canvas id="rendezVousChart"></canvas>
+            <div class="stat">
+                <div class="stat-figure text-red-500">
+                    <i class="fas fa-times-circle text-4xl"></i>
+                </div>
+                <div class="stat-title">Annulés</div>
+                <div class="stat-value text-red-500">{{ $cancelledRendezVous }}</div>
+                <div class="stat-desc">Rendez-vous supprimés</div>
             </div>
 
-            <!-- Table des rendez-vous -->
+            <div class="stat">
+                <div class="stat-figure text-yellow-500">
+                    <i class="fas fa-calendar-week text-4xl"></i>
+                </div>
+                <div class="stat-title">Cette semaine</div>
+                <div class="stat-value text-yellow-500">{{ $rendezVousLastWeek }}</div>
+                <div class="stat-desc">RDV programmés cette semaine</div>
+            </div>
+        </div>
 
-        </main>
+        <!-- Graphique d'évolution -->
+        <div class="card bg-base-100  p-6 mt-8">
+            <h3 class="text-xl font-semibold flex items-center">
+                 Évolution des rendez-vous
+            </h3>
+        </div>
+
     </div>
 
     <!-- Chart.js Script -->
@@ -59,7 +64,7 @@
                 datasets: [{
                     label: 'Nombre de rendez-vous',
                     data: @json($rendezVousParJour->pluck('count')),
-                    borderColor: 'blue',
+                    borderColor: 'rgba(0, 123, 255, 1)',
                     backgroundColor: 'rgba(0, 123, 255, 0.2)',
                     fill: true,
                     tension: 0.3

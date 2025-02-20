@@ -1,46 +1,49 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-semibold mb-6 text-gray-800">Gestion des utilisateurs</h2>
+    <div class="flex flex-col min-h-screen bg-gray-100 p-6">
+        <x-page-title title="Gérer les utilisateurs" breadcrumb="Utilisateurs" />
 
-        <!-- Barre de recherche -->
-        <form method="GET" action="{{ route('admin.users') }}" class="mb-6">
-            <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Rechercher un utilisateur..."
-                       class="input input-bordered w-full">
-                <button type="submit" class="btn btn-primary w-full sm:w-auto">
-                    🔍 Rechercher
+        <!-- Barre d'outils -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
+            <!-- Recherche -->
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-4 w-full">
+                <label class="font-semibold text-gray-700">Rechercher :</label>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Rechercher un utilisateur..." class="input input-bordered w-full md:w-64 lg:w-80">
+                <button type="submit" class="rounded">
+                    <i class="fas fa-search"></i>
                 </button>
             </div>
-        </form>
 
-        <!-- Bouton d'ajout d'utilisateur -->
-        <div class="mb-6 flex justify-end">
-            <a href="{{ route('admin.createUser') }}" class="btn btn-success flex items-center space-x-2">
-                <i class="fas fa-user-plus text-lg"></i>
-                <span>Ajouter un utilisateur</span>
-            </a>
+            <!-- Tri -->
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-4 w-full">
+                <label class="font-semibold text-gray-700">Trier par :</label>
+                <div class="flex space-x-2">
+                    <a href="{{ route('admin.users', ['sort' => 'role', 'order' => request('order') === 'asc' ? 'desc' : 'asc']) }}"
+                       class="btn btn-outline">
+                        Rôle
+                        @if(request('sort') === 'role')
+                            @if(request('order') === 'asc') 🔼 @else 🔽 @endif
+                        @endif
+                    </a>
+                    <a href="{{ route('admin.users', ['sort' => 'created_at', 'order' => request('order') === 'asc' ? 'desc' : 'asc']) }}"
+                       class="btn btn-outline">
+                        Date d'inscription
+                        @if(request('sort') === 'created_at')
+                            @if(request('order') === 'asc') 🔼 @else 🔽 @endif
+                        @endif
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bouton Ajouter -->
+            <div class="flex justify-end w-full md:w-auto">
+                <a href="{{ route('admin.createUser') }}" class="btn btn-success flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i> Ajouter
+                </a>
+            </div>
         </div>
 
-        <!-- Tri des utilisateurs -->
-        <div class="mb-6 flex space-x-4">
-            <a href="{{ route('admin.users', ['sort' => 'role', 'order' => request('order') === 'asc' ? 'desc' : 'asc']) }}"
-               class="btn btn-outline">
-                Trier par rôle
-                @if(request('sort') === 'role')
-                    @if(request('order') === 'asc') 🔼 @else 🔽 @endif
-                @endif
-            </a>
-
-            <a href="{{ route('admin.users', ['sort' => 'created_at', 'order' => request('order') === 'asc' ? 'desc' : 'asc']) }}"
-               class="btn btn-outline">
-                Trier par date d'inscription
-                @if(request('sort') === 'created_at')
-                    @if(request('order') === 'asc') 🔼 @else 🔽 @endif
-                @endif
-            </a>
-        </div>
-
-        <!-- Liste des utilisateurs sous forme de cartes -->
+        <!-- Liste des utilisateurs -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse ($users as $user)
                 <div class="card bg-base-100 shadow-xl">
