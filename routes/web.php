@@ -13,6 +13,8 @@ use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\DashboardController;
 use App\Models\RendezVous;
 use Livewire\Livewire;
+use App\Http\Controllers\GitHubController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +56,8 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+
+Route::get('/footer-info', [GitHubController::class, 'footerInfo']);
 
 
 Route::get('/rendezvous/{token}', function ($token) {

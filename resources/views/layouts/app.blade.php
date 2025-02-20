@@ -51,7 +51,10 @@
     <main>
         {{ $slot }}
     </main>
+    @include('partial.footer')
+
 </div>
+
 
 
 <!-- Toast Container -->

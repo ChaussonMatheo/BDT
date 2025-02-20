@@ -15,30 +15,42 @@
             @if($step === 1)
                 <h3 class="text-lg font-semibold mb-4">Choisissez votre type de véhicule :</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Petite Voiture -->
                     <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedCarType == 'petite_voiture' ? 'border-blue-500' : '' }}">
                         <div class="card-body flex flex-col items-center">
                             <i class="fas fa-car-side text-4xl text-blue-500"></i>
                             <h4 class="text-lg font-semibold text-gray-800">Petite Voiture</h4>
+                            <p class="text-sm text-gray-600 text-center mt-2">
+                                Exemples : Renault Clio, Peugeot 208, Fiat 500
+                            </p>
                             <button wire:click="selectCarType('petite_voiture')" class="btn btn-primary w-full mt-3">
                                 @if($selectedCarType == 'petite_voiture') ✅ Sélectionné @else Sélectionner @endif
                             </button>
                         </div>
                     </div>
 
+                    <!-- Berline -->
                     <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedCarType == 'berline' ? 'border-blue-500' : '' }}">
                         <div class="card-body flex flex-col items-center">
                             <i class="fas fa-car text-4xl text-green-500"></i>
                             <h4 class="text-lg font-semibold text-gray-800">Berline</h4>
+                            <p class="text-sm text-gray-600 text-center mt-2">
+                                Exemples : BMW Série 3, Mercedes Classe C, Audi A4
+                            </p>
                             <button wire:click="selectCarType('berline')" class="btn btn-primary w-full mt-3">
                                 @if($selectedCarType == 'berline') ✅ Sélectionné @else Sélectionner @endif
                             </button>
                         </div>
                     </div>
 
+                    <!-- SUV / 4x4 -->
                     <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedCarType == 'suv_4x4' ? 'border-blue-500' : '' }}">
                         <div class="card-body flex flex-col items-center">
                             <i class="fas fa-truck-monster text-4xl text-red-500"></i>
                             <h4 class="text-lg font-semibold text-gray-800">SUV / 4x4</h4>
+                            <p class="text-sm text-gray-600 text-center mt-2">
+                                Exemples : Range Rover Evoque, Toyota RAV4, Nissan X-Trail
+                            </p>
                             <button wire:click="selectCarType('suv_4x4')" class="btn btn-primary w-full mt-3">
                                 @if($selectedCarType == 'suv_4x4') ✅ Sélectionné @else Sélectionner @endif
                             </button>
@@ -52,6 +64,7 @@
                     Suivant
                 </button>
             @endif
+
 
             <!-- Étape 1 : Sélection du service -->
             @if($step === 2)
