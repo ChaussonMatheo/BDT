@@ -28,15 +28,22 @@
 
         <div class="drawer-side z-[1000]">
             <label for="admin-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-            <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-                <li class="menu-title"><i class="fas fa-user-shield"></i> Administration</li>
-                <li><a href="{{ route('prestations.index') }}"><i class="fas fa-wrench"></i> Services</a></li>
-                <li><a href="{{ route('garages.index') }}"><i class="fas fa-warehouse"></i> Garages</a></li>
-                <li><a href="{{ route('admin.users') }}"><i class="fas fa-users-cog"></i> Gestion des utilisateurs</a></li>
-                <li><a href="{{ route('availabilities.index') }}"><i class="fas fa-clock"></i> Disponibilités</a></li>
+            <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4 flex flex-col justify-between">
+                <div>
+                    <li class="menu-title"><i class="fas fa-user-shield"></i> Administration</li>
+                    <li><a href="{{ route('prestations.index') }}"><i class="fas fa-wrench"></i> Services</a></li>
+                    <li><a href="{{ route('garages.index') }}"><i class="fas fa-warehouse"></i> Garages</a></li>
+                    <li><a href="{{ route('admin.users') }}"><i class="fas fa-users-cog"></i> Gestion des utilisateurs</a></li>
+                    <li><a href="{{ route('availabilities.index') }}"><i class="fas fa-clock"></i> Disponibilités</a></li>
+                </div>
 
+                <!-- Affichage de la version -->
+                <div class="text-gray-500 text-sm text-center mt-6">
+                    Version {{ config('app.version') }}
+                </div>
             </ul>
         </div>
+
     </div>
     <!-- Page Heading -->
     @if (isset($header))

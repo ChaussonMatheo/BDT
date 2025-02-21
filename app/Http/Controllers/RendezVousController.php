@@ -5,6 +5,8 @@ use App\Mail\RendezVousConfirmation;
 use App\Models\RendezVous;
 use App\Models\Garage;
 use App\Models\Prestation;
+use App\Models\Event;
+use App\Http\Controllers\EventController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -42,7 +44,7 @@ class RendezVousController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+       $validated = $request->validate([
             'date_heure' => 'required|date',
             'garage_id' => 'nullable|exists:garages,id',
             'prestation_id' => 'nullable|exists:prestations,id',
@@ -66,6 +68,21 @@ class RendezVousController extends Controller
             'statut' => $request->statut,
         ]);
 
+
+        // Récupérer la durée de la prestation associée
+        $prestation = Prestation::findOrFail($validated['prestation_id']);
+        $duree = $prestation->duree; // Supposons que la durée est en minutes
+
+        // Calcul de la date de fin en ajoutant la durée
+        $dateDebut = Carbon::parse($validated['date_heure']);
+        $dateFin = $dateDebut->addMinutes($duree);
+
+        // Création de l'événement associé
+        Event::create([
+            'title' => "Rendez-vous: " . $prestation->nom,
+            'start_time' => $dateDebut, // Date de début
+            'end_time' => $dateFin, // Date de fin
+        ]);
 
 
 

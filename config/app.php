@@ -121,6 +121,7 @@ return [
     | will not be safe. Please do this before deploying an application!
     |
     */
+    'version' => env('APP_VERSION', '1.0.0'),
 
     'key' => env('APP_KEY'),
 
