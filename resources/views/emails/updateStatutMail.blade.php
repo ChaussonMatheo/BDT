@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmation de votre rendez-vous</title>
+    <title>@if($rendezVous->statut == "confirmé") Confirmation @else Annulation @endif de votre rendez-vous</title>
     <style>
         body {
             font-family: 'Poppins', Arial, sans-serif;
@@ -18,16 +18,17 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border: 2px solid #10B981; /* Vert DaisyUI Emerald */
+            border: 2px solid @if($rendezVous->statut == "confirmé") #10B981 @else #EF4444 @endif; /* Vert ou Rouge */
         }
         .header {
-            background-color: #047857; /* Vert foncé Emerald */
+            background-color: @if($rendezVous->statut == "confirmé") #047857 @else #B91C1C @endif; /* Vert foncé ou Rouge */
             color: #ffffff;
             text-align: center;
             padding: 15px;
             border-radius: 8px 8px 0 0;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
+            text-transform: uppercase;
         }
         .content {
             padding: 20px;
@@ -39,7 +40,7 @@
             width: 80%;
             margin: 20px auto;
             text-align: center;
-            background-color: #10B981; /* Vert Emerald */
+            background-color: @if($rendezVous->statut == "confirmé") #10B981 @else #F87171 @endif;
             color: white;
             padding: 12px;
             border-radius: 6px;
@@ -48,7 +49,7 @@
             transition: background 0.3s ease-in-out;
         }
         .btn:hover {
-            background-color: #059669; /* Vert plus foncé pour hover */
+            background-color: @if($rendezVous->statut == "confirmé") #059669 @else #DC2626 @endif;
         }
         .footer {
             text-align: center;
@@ -58,7 +59,7 @@
             border-top: 1px solid #eeeeee;
         }
         .highlight {
-            color: #047857; /* Vert foncé DaisyUI */
+            color: @if($rendezVous->statut == "confirmé") #047857 @else #B91C1C @endif;
             font-weight: bold;
         }
     </style>
@@ -68,29 +69,41 @@
 <div class="container">
     <!-- HEADER -->
     <div class="header">
-        Confirmation de votre rendez-vous - BDT Detailing
+        @if($rendezVous->statut == "confirmé")
+            ✅ Confirmation de votre rendez-vous
+        @else
+            ❌ Annulation de votre rendez-vous
+        @endif
     </div>
 
     <!-- CONTENU -->
     <div class="content">
         <p>Bonjour <span class="highlight">{{ $rendezVous->guest_name ?? $rendezVous->user->name }}</span>,</p>
 
-        <p>Votre rendez-vous a bien été enregistré chez<strong>BDT.</strong> </p>
+        @if($rendezVous->statut == "confirmé")
+            <p>Votre rendez-vous a bien été <strong>confirmé</strong> chez <strong>BDT</strong>.</p>
+        @else
+            <p>Nous sommes désolés, votre rendez-vous a été <strong>annulé</strong>.</p>
+            <p>Vous pouvez reprendre rendez-vous à tout moment en cliquant sur le bouton ci-dessous.</p>
+        @endif
 
         <h3 class="highlight">Détails du rendez-vous :</h3>
         <ul>
             <li><strong>Date : </strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->translatedFormat('l d F Y') }}</li>
             <li><strong>Heure : </strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->format('H:i') }}</li>
             <li><strong>Prestation : </strong> {{ $rendezVous->prestation->service }}</li>
-            <li><strong>Statut : </strong> {{ ucfirst($rendezVous->statut) }}</li>
+            <li><strong>Statut : </strong> <span class="highlight">{{ ucfirst($rendezVous->statut) }}</span></li>
         </ul>
 
-        <p>Vous pouvez gérer votre rendez-vous en cliquant sur le bouton ci-dessous :</p>
+        @if($rendezVous->statut == "confirmé")
+            <p>Vous pouvez gérer votre rendez-vous en cliquant sur le bouton ci-dessous :</p>
+            <a href="{{ $manageUrl }}" class="btn">Gérer mon rendez-vous</a>
+            <a href="{{ $icsLink }}" class="btn">📅 Ajouter à mon calendrier</a>
+        @else
+            <a href="{{ url('/rendezVous/create') }}" class="btn">📆 Prendre un nouveau rendez-vous</a>
+        @endif
 
-        <!-- BOUTON GÉRER LE RENDEZ-VOUS -->
-        <a href="{{ $manageUrl }}" class="btn">Gérer mon rendez-vous</a>
-
-        <p>Si vous souhaitez modifier ou annuler votre rendez-vous, veuillez nous contacter.</p>
+        <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
 
         <p>À très bientôt chez <strong>BDT Detailing</strong> !</p>
     </div>

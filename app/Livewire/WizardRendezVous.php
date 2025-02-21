@@ -26,6 +26,7 @@ class WizardRendezVous extends Component
 
     public $availableSlots = []; // Liste des créneaux disponibles
 
+    protected $layout = 'layouts.app';
 
 
     public $selectedCarType = null;
@@ -301,7 +302,8 @@ class WizardRendezVous extends Component
         session()->flash('success', 'Rendez-vous enregistré avec succès. ' . $message);
 
         // Redirection vers la liste des rendez-vous
-        return redirect()->route('rendezvous.index');
+        return redirect()->route('rendezvous.confirmation');
+
     }
 
 
@@ -309,6 +311,6 @@ class WizardRendezVous extends Component
     {
         return view('livewire.wizard-rendez-vous', [
             'prestations' => Prestation::all(),
-        ]);
+        ])->layout('layouts.app');;
     }
 }

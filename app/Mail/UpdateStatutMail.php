@@ -25,7 +25,8 @@ class UpdateStatutMail extends Mailable
         return $this->subject("Mise à jour de votre rendez-vous - BDT")
             ->view('emails.updateStatutMail')
             ->with([
-                'manageUrl' => url('/rendezvous/' . $this->rendezVous->token)
+                'manageUrl' => url('/rendezvous/' . $this->rendezVous->token .  '/info'),
+                'icsLink' => url('/rendezvous/' . $this->rendezVous->token . '/download-ics'),
             ]);
     }
 }

@@ -142,6 +142,7 @@
                 </div>
 
                 <!-- 🔍 Debug Panel -->
+            @if(Auth::user())
                 @if(Auth::user()->role === 'admin')
                 <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-700">🔍 Debugging Data</h3>
@@ -163,6 +164,7 @@
                     <h4 class="text-sm font-semibold mt-2">⚠️ Créneaux bloqués :</h4>
                     <pre class="text-xs bg-white p-2 rounded-md border">{{ json_encode($blockedSlots ?? [], JSON_PRETTY_PRINT) }}</pre>
                 </div>
+                @endif
                 @endif
             @endif
 

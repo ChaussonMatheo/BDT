@@ -441,10 +441,7 @@
                         emoji = "🚫";
                     }
 
-                    // Création du toast avec animation
-                    let toast = document.createElement("div");
-                    toast.className = `alert ${toastType} shadow-lg p-3 opacity-0 translate-y-5 transition-all duration-500`;
-                    toast.innerHTML = `<span>${emoji} Statut mis à jour : ${data.statut}</span>`;
+
 
                     // Ajout au container et animation d’apparition
                     document.getElementById("toast-container").appendChild(toast);
