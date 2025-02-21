@@ -1,23 +1,27 @@
 <x-app-layout>
     <div class="min-h-screen bg-gray-100">
-        <!-- Hero Section -->
         <section class="hero min-h-screen bg-white text-emerald-600 flex items-center">
             <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-6">
                 <!-- Image à gauche -->
-                <div class="w-full md:w-1/2 flex justify-center">
+                <div class="w-full flex justify-center">
                     <img src="{{ asset('images/car.png') }}" alt="Detailing Automobile"
-                         class="max-w-xs md:max-w-md rounded-lg">
+                         class="max-w-sm md:max-w-lg rounded-lg">
+
                 </div>
 
-                <!-- Texte à droite -->
+                <!-- Texte à droite (remplacé par un SVG) -->
                 <div class="w-full md:w-1/2 text-right relative">
-                    <h1 class="text-4xl md:text-6xl font-bold shine-text text-emerald-500">Impeccable</h1>
-                    <p class="mt-4 text-lg md:text-xl text-blue-950">
+                    <img src="{{ asset('images/test_logo2.svg') }}" alt="Impeccable"
+                         class="w-96 md:w-[500px] text-emerald-500 shine-svg ">
+
+                    <p class="mt-4 text-lg md:text-xl text-blue-950 mr-12">
                         Offrez à votre voiture un soin d’exception.
                     </p>
-                    <a href="{{ route('rendezvous.create') }}" class="btn btn-primary mt-6">
+                    <a href="{{ route('rendezvous.create') }}"
+                       class="btn btn-primary mt-6  text-lg md:text-xl flex items-center justify-center">
                         Prendre Rendez-vous
                     </a>
+
                 </div>
             </div>
         </section>
@@ -111,20 +115,23 @@
 
     <!-- Effet de brillance automatique -->
     <style>
-        .shine-text {
+        .shine-svg {
+            opacity: 1 !important;
+            visibility: visible !important;
             position: relative;
             display: inline-block;
-            background: linear-gradient(90deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 1), rgba(16, 185, 129, 0.3));
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            mask-image: linear-gradient(90deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 1), rgba(16, 185, 129, 0.3));
+            -webkit-mask-image: linear-gradient(90deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 1), rgba(16, 185, 129, 0.3));
+            mask-size: 200% auto;
+            -webkit-mask-size: 200% auto;
             animation: shine 4s infinite linear;
         }
 
         @keyframes shine {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+            0% { mask-position: -200% 0; -webkit-mask-position: -200% 0; }
+            100% { mask-position: 200% 0; -webkit-mask-position: 200% 0; }
         }
+
     </style>
 
 
