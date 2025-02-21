@@ -41,8 +41,8 @@ Route::resource('garages', GarageController::class);
 Route::resource('prestations', PrestationController::class);
 
 
-
-Route::get('/rendezvous/create', WizardRendezVous::class)->middleware('auth')->name('rendezvous.create');
+Route::get('/rendezvous/{token}/download-ics', [RendezVousController::class, 'downloadICS'])->name('rendezvous.download.ics');
+Route::get('/rendezvous/create', WizardRendezVous::class)->name('rendezvous.create');
 
 Route::delete('/rendezvous/{id}', [RendezVousController::class, 'destroy'])->middleware('auth')->name('rendezvous.destroy');
 Route::middleware(['auth'])->group(function () {
@@ -52,7 +52,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('rendezvous', RendezVousController::class);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
     Route::get('/planning', [PlanningController::class, 'index'])->name('planning.index');
-
 
 });
 
