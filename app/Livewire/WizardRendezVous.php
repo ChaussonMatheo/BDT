@@ -18,6 +18,7 @@ class WizardRendezVous extends Component
 {
     public $step = 1;
     public $selectedService = null;
+    public $selected_service_duration = 0;
     public $selectedDate = null;
     public $selectedTime = null;
     public $timeSlots = [];
@@ -25,7 +26,7 @@ class WizardRendezVous extends Component
 
     public $availableSlots = []; // Liste des créneaux disponibles
 
-    public $serviceDuration = 30; // Durée en minutes
+
 
     public $selectedCarType = null;
 
@@ -50,6 +51,8 @@ class WizardRendezVous extends Component
     public function selectService($serviceId)
     {
         $this->selectedService = $serviceId;
+        $prestation = Prestation::find($serviceId);
+        $this->selected_service_duration = $prestation ? $prestation->duree_estimee : 0;
         $this->resetValidation();
     }
 
@@ -84,7 +87,7 @@ class WizardRendezVous extends Component
             'sunday'    => 'dimanche',
         ];
 
-        for ($i = 0; $i < 14; $i++) {
+        for ($i = 0; $i < 14; $i++) { // On propose les 14 prochains jours
             $date = Carbon::now()->addDays($i);
             $dayOfWeekEn = strtolower($date->format('l')); // Jour en anglais
 
@@ -92,7 +95,7 @@ class WizardRendezVous extends Component
             $dayOfWeekFr = $joursEnToFr[$dayOfWeekEn] ?? null;
 
             if (!$dayOfWeekFr) {
-                continue; // S'il n'existe pas, on ignore
+                continue; // Ignorer si la conversion échoue
             }
 
             // Vérifier si c'est un jour férié
@@ -101,9 +104,9 @@ class WizardRendezVous extends Component
             // Vérifier si une disponibilité existe pour ce jour
             $availabilities = Availability::where('day_of_week', $dayOfWeekFr)
                 ->where('is_closed', false)
-                ->get();
+                ->exists();
 
-            if (!$isHoliday && $availabilities->isNotEmpty()) {
+            if (!$isHoliday && $availabilities) {
                 $this->availableDays[] = [
                     'formatted' => $date->translatedFormat('l d F'),
                     'value' => $date->toDateString(),
@@ -117,9 +120,15 @@ class WizardRendezVous extends Component
     /**
      * Génère les créneaux horaires disponibles en fonction des disponibilités et des rendez-vous existants.
      */
+    public $blockedSlots = []; // Liste des créneaux bloqués pour le debug
+    public $existingRendezVous = []; // Liste des rendez-vous existants
+
     public function generateTimeSlots()
     {
-        $this->availableSlots = []; // Réinitialisation
+        $this->availableSlots = [];
+        $this->blockedSlots = [];
+        $this->existingRendezVous = [];
+
         if (!$this->selectedDate) return;
 
         $dayOfWeekEn = strtolower(Carbon::parse($this->selectedDate)->format('l'));
@@ -135,37 +144,79 @@ class WizardRendezVous extends Component
             'sunday'    => 'dimanche',
         ];
 
-        // Convertir en français
         $dayOfWeekFr = $joursEnToFr[$dayOfWeekEn] ?? null;
-        if (!$dayOfWeekFr) {
-            return;
-        }
+        if (!$dayOfWeekFr) return;
 
         // Récupérer les disponibilités pour ce jour
         $availabilities = Availability::where('day_of_week', $dayOfWeekFr)
             ->where('is_closed', false)
             ->get();
 
+        // Récupérer tous les rendez-vous pour ce jour
+        $rendezVous = RendezVous::whereDate('date_heure', $this->selectedDate)
+            ->with('prestation')
+            ->get();
+
+        $this->existingRendezVous = $rendezVous->toArray(); // Stocke les rendez-vous pour affichage
+
         $slots = [];
-        foreach ($availabilities as $availability) {
-            $startTime = Carbon::parse($availability->start_time);
-            $endTime = Carbon::parse($availability->end_time);
+        $step = 15; // Intervalle entre chaque créneau
+        $blockedSlots = [];
 
-            while ($startTime->addMinutes($this->serviceDuration)->lte($endTime)) {
-                $slot = $startTime->format('H:i');
+        $pauseStart = Carbon::parse('12:00');
+        $pauseEnd = Carbon::parse('14:00');
+        $endOfDay = Carbon::parse('18:00');
 
-                // Vérifier si ce créneau est déjà réservé
-                $isBooked = RendezVous::where('date_heure', $this->selectedDate . ' ' . $slot)
-                    ->exists();
+        // **1️⃣ Bloquer la pause midi et la fin de journée**
+        $currentTime = Carbon::parse('00:00');
+        while ($currentTime->lt($endOfDay)) {
+            $formattedTime = $currentTime->format('H:i');
+            if ($currentTime->between($pauseStart, $pauseEnd, true)) {
+                $blockedSlots[] = $formattedTime; // Marquer la pause
+            }
+            $currentTime->addMinutes($step);
+        }
 
-                if (!$isBooked) {
-                    $slots[] = $slot;
+        // **2️⃣ Bloquer les rendez-vous existants en fonction de leur durée**
+        foreach ($rendezVous as $rdv) {
+            if ($rdv->prestation) {
+                $rdvStart = Carbon::parse($rdv->date_heure);
+                $rdvEnd = $rdvStart->copy()->addMinutes($rdv->prestation->duree_estimee);
+
+                $tempTime = $rdvStart->copy();
+                while ($tempTime->lt($rdvEnd)) {
+                    $blockedSlots[] = $tempTime->format('H:i');
+                    $tempTime->addMinutes($step);
                 }
             }
         }
 
-        $this->availableSlots = $slots;
+        // **3️⃣ Générer les créneaux en tenant compte des blocages**
+        foreach ($availabilities as $availability) {
+            $startTime = Carbon::parse($availability->start_time);
+            $endTime = Carbon::parse($availability->end_time);
 
+            while ($startTime->lt($endTime)) {
+                $slotTime = $startTime->format('H:i');
+
+                // Empêcher les services de dépasser la pause midi ou 18h
+                $serviceEndTime = $startTime->copy()->addMinutes($this->selected_service_duration);
+                if ($serviceEndTime->gt($pauseStart) && $startTime->lt($pauseStart)) {
+                    $blockedSlots[] = $slotTime; // Début avant la pause
+                }
+                if ($serviceEndTime->gt($endOfDay)) {
+                    $blockedSlots[] = $slotTime; // Dépasse 18h
+                }
+
+                $isAvailable = !in_array($slotTime, $blockedSlots);
+
+                $slots[$slotTime] = $isAvailable;
+                $startTime->addMinutes($step);
+            }
+        }
+
+        $this->availableSlots = $slots;
+        $this->blockedSlots = array_unique($blockedSlots);
     }
 
 

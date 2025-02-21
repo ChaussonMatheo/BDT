@@ -74,6 +74,7 @@
                         <div class="card bg-base-100 shadow-lg p-4 border {{ $selectedService == $prestation->id ? 'border-blue-500' : '' }}">
                             <h4 class="text-lg font-semibold text-gray-800">{{ $prestation->service }}</h4>
                             <p class="text-gray-600 text-sm">{{ $prestation->description }}</p>
+                            <p class="text-gray-600 text-sm">Durée : {{ $prestation->duree_estimee }}</p>
                             <p class="text-gray-800 font-semibold mt-2">
                                 Tarif :
                                 {{ match ($selectedCarType) {
@@ -117,12 +118,14 @@
 
                 @if($selectedDate)
                     <h3 class="text-lg font-semibold mt-6 mb-4">Choisissez un créneau :</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        @foreach($availableSlots as $slot)
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        @foreach($availableSlots as $slot => $isAvailable)
+                            @if($isAvailable) {{-- On n'affiche que les créneaux disponibles --}}
                             <button wire:click="selectTime('{{ $slot }}')"
                                     class="btn w-full {{ $selectedTime === $slot ? 'btn-primary' : 'btn-outline' }}">
                                 {{ $slot }}
                             </button>
+                            @endif
                         @endforeach
                     </div>
                 @else
@@ -137,9 +140,34 @@
                         Suivant
                     </button>
                 </div>
+
+                <!-- 🔍 Debug Panel -->
+                @if(Auth::user()->role === 'admin')
+                <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-700">🔍 Debugging Data</h3>
+
+                    <p class="text-sm text-gray-600"><strong>Étape actuelle :</strong> {{ $step }}</p>
+                    <p class="text-sm text-gray-600"><strong>Date sélectionnée :</strong> {{ $selectedDate ?? 'Aucune' }}</p>
+                    <p class="text-sm text-gray-600"><strong>Créneau sélectionné :</strong> {{ $selectedTime ?? 'Aucun' }}</p>
+                    <p class="text-sm text-gray-600"><strong>Durée du service :</strong> {{ $selected_service_duration ?? 'Non défini' }} min</p>
+
+                    <h4 class="text-sm font-semibold mt-2">📅 Jours disponibles :</h4>
+                    <pre class="text-xs bg-white p-2 rounded-md border">{{ json_encode($availableDays, JSON_PRETTY_PRINT) }}</pre>
+
+                    <h4 class="text-sm font-semibold mt-2">🕒 Créneaux disponibles :</h4>
+                    <pre class="text-xs bg-white p-2 rounded-md border">{{ json_encode($availableSlots, JSON_PRETTY_PRINT) }}</pre>
+
+                    <h4 class="text-sm font-semibold mt-2">🚗 Rendez-vous déjà pris :</h4>
+                    <pre class="text-xs bg-white p-2 rounded-md border">{{ json_encode($existingRendezVous ?? [], JSON_PRETTY_PRINT) }}</pre>
+
+                    <h4 class="text-sm font-semibold mt-2">⚠️ Créneaux bloqués :</h4>
+                    <pre class="text-xs bg-white p-2 rounded-md border">{{ json_encode($blockedSlots ?? [], JSON_PRETTY_PRINT) }}</pre>
+                </div>
+                @endif
             @endif
 
-            @if($step === 4)
+
+        @if($step === 4)
                 <div class="card bg-base-100 p-6">
                     <div class="card-body">
 

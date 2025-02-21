@@ -5,7 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use Carbon\Carbon;
 use App\Models\Availability;
-use App\Models\Appointment;
+use App\Models\RendezVous;
 use App\Models\Holiday;
 
 class SelectAvailableSlots extends Component
@@ -45,21 +45,34 @@ class SelectAvailableSlots extends Component
             ->get();
 
         $slots = [];
+        $step = 15; // Intervalle des créneaux en minutes
+        $blockedSlots = [];
+
         foreach ($availabilities as $availability) {
             $startTime = Carbon::parse($availability->start_time);
             $endTime = Carbon::parse($availability->end_time);
 
-            while ($startTime->addMinutes($this->serviceDuration)->lte($endTime)) {
-                $slot = $startTime->format('H:i');
+            while ($startTime->lt($endTime)) {
+                $slotStart = $startTime->copy();
+                $slotEnd = $slotStart->copy()->addMinutes($this->serviceDuration);
 
-                // Vérifier si ce créneau est déjà réservé
-                $isBooked = Appointment::where('date', $this->selectedDate)
-                    ->where('time', $slot)
+                // Vérifier si ce créneau est déjà occupé
+                $isBooked = RendezVous::whereDate('date_heure', $this->selectedDate)
+                    ->where(function ($query) use ($slotStart, $slotEnd) {
+                        $query->whereBetween('date_heure', [$slotStart->format('Y-m-d H:i:s'), $slotEnd->format('Y-m-d H:i:s')])
+                            ->orWhereRaw('? BETWEEN date_heure AND ADDTIME(date_heure, INTERVAL (SELECT prestation.duree FROM prestations WHERE prestations.id = rendez_vous.prestation_id) MINUTE)', [$slotStart->format('Y-m-d H:i:s')]);
+                    })
                     ->exists();
 
-                if (!$isBooked) {
-                    $slots[] = $slot;
+                // Bloquer tous les créneaux affectés par une réservation
+                if ($isBooked) {
+                    for ($i = 0; $i < $this->serviceDuration / $step; $i++) {
+                        $blockedSlots[] = $slotStart->copy()->addMinutes($i * $step)->format('H:i');
+                    }
                 }
+
+                $slots[$slotStart->format('H:i')] = !in_array($slotStart->format('H:i'), $blockedSlots);
+                $startTime->addMinutes($step);
             }
         }
 
