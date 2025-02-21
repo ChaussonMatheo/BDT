@@ -117,12 +117,15 @@ class RendezVousController extends Controller
 
         return redirect()->route('rendezvous.index')->with('success', 'Rendez-vous mis à jour avec succès.');
     }
-    public function destroy(RendezVous $rendezVous)
+    public function destroy($id)
     {
-        $rendezVous->delete();
+        $rendezVous = RendezVous::findOrFail($id); // Recherche le rendez-vous
+
+        $rendezVous->delete(); // Supprime le rendez-vous
 
         return redirect()->route('rendezvous.index')->with('success', 'Le rendez-vous a été supprimé avec succès.');
     }
+
 
     public function updateStatus(Request $request, $id)
     {
