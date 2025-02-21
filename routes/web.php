@@ -43,8 +43,8 @@ Route::resource('prestations', PrestationController::class);
 
 
 Route::get('/rendezvous/create', WizardRendezVous::class)->middleware('auth')->name('rendezvous.create');
-Route::get('/rendezvous/{id}', [RendezVousController::class, 'showwithid'])->name('rendezvous.show')->middleware('auth');
-    Route::delete('/rendezvous/{id}', [RendezVousController::class, 'destroy'])->name('rendezvous.destroy');
+
+Route::delete('/rendezvous/{id}', [RendezVousController::class, 'destroy'])->middleware('auth')->name('rendezvous.destroy');
 Route::middleware(['auth'])->group(function () {
     Route::get('/rendezvous/{rendezVous}/edit', [RendezVousController::class, 'edit'])->name('rendezvous.edit');
     Route::put('/rendezvous/{rendezVous}', [RendezVousController::class, 'update'])->name('rendezvous.update');
