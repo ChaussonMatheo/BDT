@@ -202,21 +202,34 @@ class RendezVousController extends Controller
     public function downloadICS($token)
     {
         // Récupérer le rendez-vous depuis la base de données
-        $rendezVous = RendezVous::where('token', $token)->firstOrFail();
+        $rendezVous = RendezVous::where('token', $token)->with('prestation')->firstOrFail();
+
+        // Vérifier si la prestation existe
+        if (!$rendezVous->prestation) {
+            abort(404, "Prestation non trouvée pour ce rendez-vous.");
+        }
 
         // Définir les informations pour le fichier ICS
-        $eventTitle = "Rendez-vous - " . ($rendezVous->user_id ? "Client #" . $rendezVous->user_id : $rendezVous->guest_name);
-        $eventDescription = "Prestation : " . $rendezVous->prestation_id . "\nType de voiture : " . $rendezVous->type_de_voiture . "\nTarif : " . number_format($rendezVous->tarif, 2, ',', ' ') . "€";
-        $startTime = $rendezVous->date_heure; // Format déjà stocké en DB
-        $endTime = date('Y-m-d H:i:s', strtotime($rendezVous->date_heure . ' +1 hour')); // On suppose que le RDV dure 1h
-        $location = "Garage ID : " . $rendezVous->garage_id;
+        $eventTitle = "Rendez-vous - " . $rendezVous->prestation->service;
+
+        // Formater la description avec des retours à la ligne corrects pour iCalendar
+        $eventDescription = "Type de voiture : " . $rendezVous->type_de_voiture . "\\n";
+        $eventDescription .= "Tarif : " . number_format($rendezVous->tarif, 2, ',', ' ') . "€\\n";
+
+        // Définition du lieu (si garage_id est null, afficher 'Lieu à confirmer')
+        $location = $rendezVous->garage_id ? "Garage ID : " . $rendezVous->garage_id : "Lieu à confirmer";
+
+        // Récupération de la durée estimée depuis la prestation (en minutes)
+        $dureeEstimee = intval($rendezVous->prestation->duree_estimee);
+        $startTime = $rendezVous->date_heure;
+        $endTime = date('Y-m-d H:i:s', strtotime($startTime . " +$dureeEstimee minutes"));
 
         // Générer le contenu du fichier ICS
         $icsContent = "BEGIN:VCALENDAR\r\n";
         $icsContent .= "VERSION:2.0\r\n";
         $icsContent .= "PRODID:-//BDT//FR\r\n";
         $icsContent .= "BEGIN:VEVENT\r\n";
-        $icsContent .= "UID:" . uniqid() . "@votreapp.com\r\n";
+        $icsContent .= "UID:" . uniqid() . "@bdt.com\r\n";
         $icsContent .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
         $icsContent .= "DTSTART:" . gmdate('Ymd\THis\Z', strtotime($startTime)) . "\r\n";
         $icsContent .= "DTEND:" . gmdate('Ymd\THis\Z', strtotime($endTime)) . "\r\n";
@@ -229,7 +242,7 @@ class RendezVousController extends Controller
         // Retourner le fichier à télécharger
         return response($icsContent)
             ->header('Content-Type', 'text/calendar')
-            ->header('Content-Disposition', 'attachment; filename="rendezvous.ics"');
+            ->header('Content-Disposition', 'attachment; filename=\"rendezvous.ics\""');
     }
 
 
