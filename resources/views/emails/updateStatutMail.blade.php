@@ -75,14 +75,14 @@
     <div class="content">
         <p>Bonjour <span class="highlight">{{ $rendezVous->guest_name ?? $rendezVous->user->name }}</span>,</p>
 
-        <p>Votre rendez-vous a bien été enregistré dans notre centre de <strong>detailing automobile</strong> **BDT**.</p>
+        <p>Votre rendez-vous a bien été enregistré chez<strong>BDT.</strong> </p>
 
         <h3 class="highlight">Détails du rendez-vous :</h3>
         <ul>
-            <li><strong>Date :</strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->translatedFormat('l d F Y') }}</li>
-            <li><strong>Heure :</strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->format('H:i') }}</li>
-            <li><strong>Prestation :</strong> {{ $rendezVous->prestation->nom }}</li>
-            <li><strong>Statut :</strong> {{ ucfirst($rendezVous->statut) }}</li>
+            <li><strong>Date : </strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->translatedFormat('l d F Y') }}</li>
+            <li><strong>Heure : </strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->format('H:i') }}</li>
+            <li><strong>Prestation : </strong> {{ $rendezVous->prestation->service }}</li>
+            <li><strong>Statut : </strong> {{ ucfirst($rendezVous->statut) }}</li>
         </ul>
 
         <p>Vous pouvez gérer votre rendez-vous en cliquant sur le bouton ci-dessous :</p>
