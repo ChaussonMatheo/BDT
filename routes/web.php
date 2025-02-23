@@ -14,7 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Models\RendezVous;
 use Livewire\Livewire;
 use App\Http\Controllers\GitHubController;
-
+use App\Http\Controllers\HomeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -22,10 +22,7 @@ use App\Http\Controllers\GitHubController;
 */
 
 // 🔹 Page d'accueil
-Route::get('/', function () {
-    return view('welcome');
-});
-
+route::get("/", [HomeController::class, "index"])->name("home");
 // 🔹 Gestion des événements (publique)
 Route::prefix('events')->group(function () {
     Route::get('/', [EventController::class, 'index']);

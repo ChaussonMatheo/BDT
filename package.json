@@ -21,6 +21,7 @@
         "@fullcalendar/daygrid": "^6.1.15",
         "@fullcalendar/interaction": "^6.1.15",
         "@fullcalendar/timegrid": "^6.1.15",
-        "gsap": "^3.12.7"
+        "gsap": "^3.12.7",
+        "swiper": "^11.2.4"
     }
 }
