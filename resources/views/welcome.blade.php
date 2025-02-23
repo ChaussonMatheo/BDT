@@ -1,5 +1,42 @@
 <x-app-layout>
+    @if (!Auth::check())
+        <div class="navbar bg-white shadow-md">
+            <!-- Navbar Start (Logo & Menu Mobile) -->
+            <div class="navbar-start">
+                <div class="dropdown">
+                    <button tabindex="0" class="btn btn-ghost lg:hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                    </button>
+                    <ul tabindex="0" class="menu menu-sm dropdown-content bg-emerald-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                        <li><a href="#">Accueil</a></li>
+                        <li><a href="#">Nos Services</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Navbar Center (Menu Desktop) -->
+            <div class="navbar-center hidden lg:flex">
+                <ul class="menu menu-horizontal px-1 text-emerald-700">
+                    <li><a href="#">Accueil</a></li>
+                    <li><a href="#">Nos Services</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Navbar End (Boutons de Connexion/Inscription) -->
+            <div class="navbar-end">
+                <a href="{{ route('login') }}" class="btn btn-sm btn-outline btn-emerald">Se connecter</a>
+                <a href="{{ route('register') }}" class="btn btn-sm btn-emerald ml-2">S'inscrire</a>
+            </div>
+        </div>
+    @endif
+
     <div class="min-h-screen bg-gray-100">
+
         <section class="hero min-h-screen bg-white text-emerald-600 flex items-center">
             <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-6">
                 <!-- Image à gauche -->
