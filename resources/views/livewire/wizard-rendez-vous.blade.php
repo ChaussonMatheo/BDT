@@ -169,11 +169,12 @@
             @endif
 
 
-        @if($step === 4)
-                <div class="card bg-base-100 p-6">
+            @if($step === 4)
+                <div class="card bg-base-100 p-6 shadow-md max-w-md mx-auto w-full">
                     <div class="card-body">
+                        <h2 class="text-xl font-semibold text-center text-gray-800">Confirmation du Rendez-vous</h2>
 
-                        <div class="mt-4">
+                        <div class="mt-4 space-y-3">
                             <p class="text-gray-600 flex items-center gap-2">
                                 <i class="fas fa-tools text-blue-500"></i>
                                 <strong>Service :</strong> {{ optional(App\Models\Prestation::find($selectedService))->service }}
@@ -194,15 +195,20 @@
                                 <h4 class="text-md font-semibold flex items-center gap-2">
                                     <i class="fas fa-user text-indigo-500"></i> Informations du Client
                                 </h4>
-                                <p class="text-gray-700 flex items-center gap-2">
-                                    <i class="fas fa-id-badge text-gray-500"></i> <strong>Nom :</strong> {{ Auth::user()->name }}
-                                </p>
-                                <p class="text-gray-700 flex items-center gap-2">
-                                    <i class="fas fa-envelope text-gray-500"></i> <strong>Email :</strong> {{ Auth::user()->email }}
-                                </p>
-                                <p class="text-gray-700 flex items-center gap-2">
-                                    <i class="fas fa-phone text-gray-500"></i> <strong>Téléphone :</strong> {{ Auth::user()->phone ?? 'Non renseigné' }}
-                                </p>
+                                <div class="grid gap-2 text-gray-700">
+                                    <p class="flex items-center gap-2">
+                                        <i class="fas fa-id-badge text-gray-500"></i>
+                                        <strong>Nom :</strong> {{ Auth::user()->name }}
+                                    </p>
+                                    <p class="flex items-center gap-2">
+                                        <i class="fas fa-envelope text-gray-500"></i>
+                                        <strong>Email :</strong> {{ Auth::user()->email }}
+                                    </p>
+                                    <p class="flex items-center gap-2">
+                                        <i class="fas fa-phone text-gray-500"></i>
+                                        <strong>Téléphone :</strong> {{ Auth::user()->phone ?? 'Non renseigné' }}
+                                    </p>
+                                </div>
                             </div>
                         @endauth
 
@@ -211,28 +217,31 @@
                                 <h4 class="text-md font-semibold flex items-center gap-2">
                                     <i class="fas fa-user-edit text-indigo-500"></i> Informations du Client
                                 </h4>
-                                <label for="guest_name" class="label"><span class="label-text">Nom</span></label>
-                                <input type="text" wire:model="guest_name" class="input input-bordered w-full" required>
+                                <div class="grid gap-3">
+                                    <label class="label" for="guest_name"><span class="label-text">Nom</span></label>
+                                    <input type="text" wire:model="guest_name" class="input input-bordered w-full" required>
 
-                                <label for="guest_email" class="label mt-2"><span class="label-text">Email</span></label>
-                                <input type="email" wire:model="guest_email" class="input input-bordered w-full" required>
+                                    <label class="label" for="guest_email"><span class="label-text">Email</span></label>
+                                    <input type="email" wire:model="guest_email" class="input input-bordered w-full" required>
 
-                                <label for="guest_phone" class="label mt-2"><span class="label-text">Téléphone</span></label>
-                                <input type="text" wire:model="guest_phone" class="input input-bordered w-full">
+                                    <label class="label" for="guest_phone"><span class="label-text">Téléphone</span></label>
+                                    <input type="text" wire:model="guest_phone" class="input input-bordered w-full">
+                                </div>
                             </div>
                         @endguest
 
-                        <div class="flex justify-between mt-6">
-                            <button wire:click.prevent="previousStep" class="btn btn-outline btn-secondary flex items-center gap-2">
+                        <div class="flex flex-col sm:flex-row justify-between mt-6 gap-3">
+                            <button wire:click.prevent="previousStep" class="btn btn-outline btn-secondary w-full sm:w-auto flex items-center gap-2">
                                 <i class="fas fa-arrow-left"></i> Retour
                             </button>
-                            <button wire:click.prevent="saveRendezVous" class="btn btn-success flex items-center gap-2">
+                            <button wire:click.prevent="saveRendezVous" class="btn btn-success w-full sm:w-auto flex items-center gap-2">
                                 <i class="fas fa-check-circle"></i> Confirmer
                             </button>
                         </div>
                     </div>
                 </div>
             @endif
+
         </div>
     </div>
 
