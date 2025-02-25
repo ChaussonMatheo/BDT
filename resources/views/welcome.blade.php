@@ -212,33 +212,24 @@
 
             <div class="mt-6 space-y-4">
                 <!-- Question 1 -->
-                <div class="collapse collapse-arrow bg-white shadow-md rounded-lg">
-                    <input type="checkbox" class="peer" />
-                    <div class="collapse-title text-lg font-bold peer-checked:bg-gray-100">
-                        Combien de temps dure un detailing complet ?
-                    </div>
+                <div tabindex="0" class="collapse collapse-arrow bg-base-200 shadow-md rounded-lg">
+                    <div class="collapse-title text-lg font-bold">Combien de temps dure un detailing complet ?</div>
                     <div class="collapse-content">
                         <p>Un detailing complet prend en moyenne entre 6 et 8 heures.</p>
                     </div>
                 </div>
 
                 <!-- Question 2 -->
-                <div class="collapse collapse-arrow bg-white shadow-md rounded-lg">
-                    <input type="checkbox" class="peer" />
-                    <div class="collapse-title text-lg font-bold peer-checked:bg-gray-100">
-                        Utilisez-vous des produits écologiques ?
-                    </div>
+                <div tabindex="0" class="collapse collapse-arrow bg-base-200 shadow-md rounded-lg">
+                    <div class="collapse-title text-lg font-bold">Utilisez-vous des produits écologiques ?</div>
                     <div class="collapse-content">
                         <p>Oui, nous utilisons des produits respectueux de l'environnement.</p>
                     </div>
                 </div>
 
                 <!-- Question 3 -->
-                <div class="collapse collapse-arrow bg-white shadow-md rounded-lg">
-                    <input type="checkbox" class="peer" />
-                    <div class="collapse-title text-lg font-bold peer-checked:bg-gray-100">
-                        Proposez-vous des abonnements pour l'entretien régulier ?
-                    </div>
+                <div tabindex="0" class="collapse collapse-arrow bg-base-200 shadow-md rounded-lg">
+                    <div class="collapse-title text-lg font-bold">Proposez-vous des abonnements pour l'entretien régulier ?</div>
                     <div class="collapse-content">
                         <p>Oui, nous avons plusieurs formules d'abonnement pour un entretien régulier de votre véhicule.</p>
                     </div>
