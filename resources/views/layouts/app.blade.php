@@ -11,19 +11,20 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
     <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="font-sans antialiased">
 
-<!-- Conteneur principal -->
-<div class="min-h-screen bg-gray-100">
+<!-- Conteneur principal pour aligner le contenu et fixer le footer -->
+<div class="flex flex-col min-h-screen bg-gray-100">
     @include('layouts.navigation')
+
     <div class="drawer drawer">
         <input id="admin-drawer" type="checkbox" class="drawer-toggle" />
 
@@ -44,28 +45,42 @@
                 </div>
             </ul>
         </div>
-
     </div>
-    <!-- Page Heading -->
-    @if (isset($header))
-        <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                {{ $header }}
-            </div>
-        </header>
-    @endif
 
-    <!-- Page Content -->
-    <main>
+    <!-- Contenu principal qui prend tout l'espace dispo -->
+    <main class="flex-1">
+        @if (isset($header))
+            <header class="bg-white shadow">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    {{ $header }}
+                </div>
+            </header>
+        @endif
+
         {{ $slot }}
     </main>
-    @include('partial.footer')
 
+    <!-- Footer fixé en bas -->
+    <footer class="bg-gray-900 text-white text-center py-4">
+        <p class="text-sm">
+            📅 Dernière mise à jour :
+            <strong>
+                @if (!empty($data['last_updated']))
+                    {{ \Carbon\Carbon::parse($data['last_updated'])->locale('fr')->diffForHumans() }}
+                @else
+                    Non disponible
+                @endif
+            </strong>
+            |
+            📝 Dernier commit :
+            <a href="{{ $data['last_commit_url'] }}" class="text-blue-400 underline">
+                {{ $data['last_commit_message'] }}
+            </a>
+        </p>
+    </footer>
 </div>
 
-
-
-<!-- Toast Container -->
+<!-- Toast Notification -->
 <div x-data="{ show: false, message: '', type: 'success' }"
      x-show="show"
      x-transition.opacity.out.duration.500ms
@@ -91,7 +106,6 @@
         }, 3000);
     }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
 
 @if (session('toast'))
     <script>
@@ -100,7 +114,6 @@
         });
     </script>
 @endif
-
 
 </body>
 </html>

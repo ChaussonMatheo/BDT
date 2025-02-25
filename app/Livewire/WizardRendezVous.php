@@ -299,10 +299,9 @@ class WizardRendezVous extends Component
         }
 
         // Flash message pour l'utilisateur avec debug info
-        session()->flash('success', 'Rendez-vous enregistré avec succès. ' . $message);
 
         // Redirection vers la liste des rendez-vous
-        return redirect()->route('rendezvous.confirmation');
+        return redirect()->route('rendezvous.confirm')->with('success', 'Votre rendez vous a bien été pris en compte. Vous allez recevoir un email de confirmation.');
 
     }
 

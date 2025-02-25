@@ -151,12 +151,13 @@ class RendezVousController extends Controller
         ]);
 
         $rendezVous = RendezVous::findOrFail($id);
-        $oldStatus = $rendezVous->statut; // Sauvegarde l'ancien statut
+        $oldStatus = $rendezVous->statut;
         $rendezVous->statut = $request->statut;
         $rendezVous->save();
 
-        // Vérifier si le rendez-vous a un utilisateur ou un invité
+        // Envoi d'un email si un utilisateur est lié au rendez-vous
         $email = $rendezVous->user ? $rendezVous->user->email : $rendezVous->guest_email;
+        $message = "Aucun email trouvé pour envoyer la notification.";
 
         if ($email) {
             try {
@@ -165,16 +166,18 @@ class RendezVousController extends Controller
             } catch (\Exception $e) {
                 $message = "Erreur lors de l'envoi de l'email : " . $e->getMessage();
             }
-        } else {
-            $message = "Aucun email trouvé pour envoyer la notification.";
         }
 
+        // Stocke le message dans la session pour déclencher un toast
+        session()->flash('success', 'Le statut du rendez-vous a été modifié.');
+
+        // Retourne une réponse JSON compatible avec AJAX
         return response()->json([
             'success' => true,
-            'message' => 'Statut mis à jour avec succès. ' . $message,
-            'statut' => $rendezVous->statut // Retourne le nouveau statut
+            'statut' => $rendezVous->statut
         ]);
     }
+
 
     public function showwithid($id)
     {

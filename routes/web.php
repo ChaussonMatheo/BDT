@@ -20,6 +20,9 @@ use App\Http\Controllers\HomeController;
 | Web Routes
 |--------------------------------------------------------------------------
 */
+Route::get('/rendezvous/confirmation', function () {
+    return view('rendezvous.confirmation');
+})->name('rendezvous.confirm');
 
 // 🔹 Page d'accueil
 route::get("/", [HomeController::class, "index"])->name("home");
@@ -38,10 +41,7 @@ Route::resource('prestations', PrestationController::class);
 Route::get('/rendezvous/create', WizardRendezVous::class)->name('rendezvous.create');
 Route::get('/rendezvous/{id}', [RendezVousController::class, 'showwithid'])->name('rendezvous.show')->middleware('auth');
 
-// 🔹 Route statique : Page de confirmation après prise de rendez-vous
-Route::get('/rendezvous/confirmation', function () {
-    return view('rendezvous.confirmation');
-})->name('rendezvous.confirmation');
+
 
 // 🔹 Route dynamique : Gestion des rendez-vous via un token
 Route::get('/rendezvous/{token}/info', function ($token) {

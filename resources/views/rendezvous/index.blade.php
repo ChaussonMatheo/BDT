@@ -46,10 +46,15 @@
         @if($rendezVous->isEmpty())
             <p class="text-gray-600 text-center">Aucun rendez-vous trouvé.</p>
         @else
-                <div role="tablist" class="tabs tabs-boxed mb-6 tabs-xl w-1/3">
-                    <a role="tab" onclick="switchTab('upcoming')" class="tab tab-active">À venir</a>
-                    <a role="tab" onclick="switchTab('past')" class="tab">Passés</a>
-                </div>
+            <div role="tablist" class="tabs tabs-bordered tabs-sm w-full mb-6 max-w-xs mx-auto flex justify-center">
+                <a role="tab" onclick="switchTab('upcoming')" class="tab tab-active text-gray-600">À venir
+                </a>
+                <a role="tab" onclick="switchTab('past')" class="tab text-gray-600">Passés
+
+                </a>
+            </div>
+
+
                 <!-- Début section des rendez-vous à venir -->
                 <div id="upcoming" class="rendezvous-list">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -323,20 +328,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-<script>
-    function switchTab(tab) {
-        // Désactiver toutes les listes
-        document.querySelectorAll('.rendezvous-list').forEach(el => el.classList.add('hidden'));
-
-        // Activer la bonne liste
-        document.getElementById(tab).classList.remove('hidden');
-
-        // Mettre à jour l'onglet actif
-        document.querySelectorAll('.tabs a').forEach(el => el.classList.remove('tab-active'));
-        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('tab-active');
-    }
-</script>
-
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -344,15 +335,42 @@
         const sortOption = document.getElementById("sortOption");
         const statusFilter = document.getElementById("statusFilter");
 
+        const upcomingTab = document.querySelector('[onclick="switchTab(\'upcoming\')"]');
+        const pastTab = document.querySelector('[onclick="switchTab(\'past\')"]');
+
+        const upcomingSection = document.getElementById("upcoming");
+        const pastSection = document.getElementById("past");
+
+        const upcomingCount = document.getElementById("upcoming-count");
+        const pastCount = document.getElementById("past-count");
+
+        // Fonction pour basculer entre les onglets avec animation
+        function switchTab(tab) {
+            const activeTab = tab === "upcoming" ? upcomingSection : pastSection;
+            const inactiveTab = tab === "upcoming" ? pastSection : upcomingSection;
+
+            // Ajoute une animation de fondu et de glissement
+            inactiveTab.classList.add("opacity-0", "translate-x-10");
+            setTimeout(() => {
+                inactiveTab.classList.add("hidden");
+                activeTab.classList.remove("hidden");
+                setTimeout(() => activeTab.classList.remove("opacity-0", "translate-x-10"), 100);
+            }, 200);
+
+            // Gérer l'activation des onglets
+            upcomingTab.classList.toggle("tab-active", tab === "upcoming");
+            pastTab.classList.toggle("tab-active", tab === "past");
+        }
+
         // Fonction pour filtrer et trier les rendez-vous
         function filterAppointments() {
             let searchText = searchInput.value.toLowerCase();
             let sortValue = sortOption.value;
             let statusValue = statusFilter.value;
 
-            let appointments = document.querySelectorAll(".rendezvous-list .card");
+            let allAppointments = document.querySelectorAll(".rendezvous-list .card");
 
-            let sortedAppointments = Array.from(appointments);
+            let sortedAppointments = Array.from(allAppointments);
 
             // Appliquer le tri
             sortedAppointments.sort((a, b) => {
@@ -367,6 +385,9 @@
             });
 
             // Appliquer le filtrage
+            let upcomingCountValue = 0;
+            let pastCountValue = 0;
+
             sortedAppointments.forEach((card) => {
                 let clientName = card.querySelector(".text-gray-600")?.innerText.toLowerCase() || "";
                 let status = card.querySelector(".font-semibold")?.innerText.toLowerCase() || "";
@@ -374,7 +395,15 @@
                 let matchesSearch = clientName.includes(searchText);
                 let matchesStatus = statusValue === "all" || status.includes(statusValue);
 
+                let dateText = card.querySelector("h3")?.innerText.split("-")[1]?.trim();
+                let appointmentDate = new Date(dateText);
+
                 if (matchesSearch && matchesStatus) {
+                    if (appointmentDate >= new Date()) {
+                        upcomingCountValue++;
+                    } else {
+                        pastCountValue++;
+                    }
                     card.classList.remove("hidden");
                 } else {
                     card.classList.add("hidden");
@@ -382,9 +411,22 @@
             });
 
             // Réorganiser les rendez-vous dans le DOM
-            let container = document.querySelector(".rendezvous-list .grid");
-            container.innerHTML = ""; // Efface tout le contenu
-            sortedAppointments.forEach((card) => container.appendChild(card));
+            let containerUpcoming = document.querySelector("#upcoming .grid");
+            let containerPast = document.querySelector("#past .grid");
+
+            containerUpcoming.innerHTML = "";
+            containerPast.innerHTML = "";
+
+            sortedAppointments.forEach((card) => {
+                let dateText = card.querySelector("h3")?.innerText.split("-")[1]?.trim();
+                let appointmentDate = new Date(dateText);
+
+                if (appointmentDate >= new Date()) {
+                    containerUpcoming.appendChild(card);
+                } else {
+                    containerPast.appendChild(card);
+                }
+            });
         }
 
         // Fonction pour récupérer la valeur selon l'option de tri
@@ -403,76 +445,59 @@
             }
         }
 
-
         // Écouteurs d'événements
         searchInput.addEventListener("input", filterAppointments);
         sortOption.addEventListener("change", filterAppointments);
         statusFilter.addEventListener("change", filterAppointments);
+        upcomingTab.addEventListener("click", () => switchTab("upcoming"));
+        pastTab.addEventListener("click", () => switchTab("past"));
 
-        // Lancer un premier tri pour l'affichage initial
+        // Initialisation : activer l'onglet "À venir" par défaut et appliquer le tri/filtre
+        switchTab("upcoming");
         filterAppointments();
     });
+
 </script>
 
 
 <script>
-    function changeStatus(id, newStatus) {
-        fetch(`/rendezvous/${id}/update-status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ statut: newStatus })
-        }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Définition des classes et de l'icône selon le statut
-                    let toastType = "alert-info";
-                    let emoji = "ℹ️";
-                    if (data.statut === "confirmé") {
-                        toastType = "alert-success";
-                        emoji = "✅";
-                    } else if (data.statut === "annulé") {
-                        toastType = "alert-error";
-                        emoji = "❌";
-                    } else if (data.statut === "refusé") {
-                        toastType = "alert-warning";
-                        emoji = "🚫";
-                    }
+    async function changeStatus(id, newStatus) {
+        try {
+            let response = await fetch(`/rendezvous/${id}/update-status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ statut: newStatus })
+            });
 
+            let data = await response.json();
 
-
-                    // Ajout au container et animation d’apparition
-                    document.getElementById("toast-container").appendChild(toast);
-                    setTimeout(() => toast.classList.remove("opacity-0", "translate-y-5"), 100);
-
-                    // Disparition après 3 secondes
-                    setTimeout(() => {
-                        toast.classList.add("opacity-0", "translate-y-5");
-                        setTimeout(() => toast.remove(), 500);
-                    }, 3000);
-                } else {
-                    showErrorToast("❌ Erreur lors de la mise à jour.");
-                }
-            }).catch(error => {
+            if (data.success) {
+                location.reload(); // Recharge la page pour que Laravel affiche le toast
+            } else {
+                showToast("Erreur lors de la mise à jour.", "error");
+            }
+        } catch (error) {
             console.error('Erreur:', error);
-            showErrorToast("❌ Erreur de communication avec le serveur.");
-        });
+            showToast("Erreur de communication avec le serveur.", "error");
+        }
     }
 
-    function showErrorToast(message) {
+    function showToast(message, type = "error") {
         let toast = document.createElement("div");
-        toast.className = "alert alert-error shadow-lg p-3 opacity-0 translate-y-5 transition-all duration-500";
-        toast.innerHTML = `<span>${message}</span>`;
+        toast.className = `alert alert-${type} shadow-lg p-3 opacity-0 translate-y-5 transition-all duration-500`;
+        toast.innerHTML = `<span>❌ ${message}</span>`;
 
         document.getElementById("toast-container").appendChild(toast);
-        setTimeout(() => toast.classList.remove("opacity-0", "translate-y-5"), 100);
 
+        setTimeout(() => toast.classList.remove("opacity-0", "translate-y-5"), 100);
         setTimeout(() => {
             toast.classList.add("opacity-0", "translate-y-5");
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     }
+
 </script>
 

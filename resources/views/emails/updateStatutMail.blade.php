@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Poppins', Arial, sans-serif;
-            background-color: #ECFDF5; /* Vert clair DaisyUI Emerald */
+            background-color: #ffffff; /* Vert clair DaisyUI Emerald */
             margin: 0;
             padding: 0;
         }
