@@ -22,7 +22,7 @@ class UpdateStatutMail extends Mailable
 
     public function build()
     {
-        return $this->subject("Mise à jour de votre rendez-vous - BDT")
+        return $this->subject("Mise à jour de votre rendez-vous - B-CLEAN")
             ->view('emails.updateStatutMail')
             ->with([
                 'manageUrl' => url('/rendezvous/' . $this->rendezVous->token .  '/info'),

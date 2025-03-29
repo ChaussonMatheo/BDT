@@ -26,7 +26,7 @@
 
             <!-- Navbar Center (Menu Desktop) -->
             <div class="navbar-center hidden lg:flex">
-                <ul class="menu menu-horizontal px-1 text-emerald-700">
+                <ul class="menu menu-horizontal px-1 text-black-700">
                     <li><a href="#">Accueil</a></li>
                     <li><a href="#tarif">Nos Services</a></li>
                     <li><a href="#">Contact</a></li>
@@ -47,14 +47,14 @@
             <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-6">
                 <!-- Image à gauche -->
                 <div class="w-full flex justify-center">
-                    <img src="{{ asset('images/car.png') }}" alt="Detailing Automobile"
+                    <img src="{{ asset('images/car3.png') }}" alt="Detailing Automobile"
                          class="max-w-sm md:max-w-lg rounded-lg">
 
                 </div>
 
                 <!-- Texte à droite (remplacé par un SVG) -->
                 <div class="w-full md:w-1/2 text-right relative">
-                    <img src="{{ asset('images/test_logo2.svg') }}" alt="Impeccable"
+                    <img src="{{ asset('images/BAUDET_LOGO.svg') }}" alt="Impeccable"
                          class="w-96 md:w-[500px] text-emerald-500 shine-svg ">
 
                     <p class="mt-4 text-lg md:text-xl text-blue-950 mr-12">
@@ -78,11 +78,11 @@
 
         <!-- Tableau des Prix -->
         <section id="tarif" class="container mx-auto my-16 px-6">
-            <h2 class="text-4xl font-bold text-center text-emerald-600 mb-8">Nos Tarifs</h2>
+            <h2 class="text-4xl font-bold text-center text-black-600 mb-8">Nos Tarifs</h2>
 
             <div class="overflow-x-auto bg-white rounded-xl shadow-lg">
                 <table class="table table-zebra w-full">
-                    <thead class="bg-emerald-500 text-white">
+                    <thead class="bg-black text-white">
                     <tr>
                         <th><i class="fa-solid fa-car mr-2"></i> Service</th>
                         <th><i class="fa-solid fa-car-side mr-2"></i> Petite voiture</th>
@@ -94,7 +94,7 @@
                     <tbody>
                     @foreach($services as $service)
                         <tr>
-                            <td class="font-semibold text-emerald-700">
+                            <td class="font-semibold text-black-700">
                                 {{ $service->service }}
                                 <div class="text-sm text-gray-500">{{ $service->description }}</div>
                             </td>
@@ -112,11 +112,11 @@
 
         <!-- Galerie Avant/Après -->
         <section class="container mx-auto my-16 px-6">
-            <h2 class="text-4xl font-bold text-center text-emerald-600">Nos Réalisations</h2>
+            <h2 class="text-4xl font-bold text-center text-black-600">Nos Réalisations</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
 
-                <!-- Image Avant/Après #1 -->
+
                 <div class="diff aspect-[16/9] shadow-lg rounded-lg overflow-hidden">
                     <div class="diff-item-1">
                         <img alt="Avant" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a.webp" />
@@ -293,5 +293,8 @@
 
 
     </style>
+<script>
+
+</script>
 
 </x-app-layout>

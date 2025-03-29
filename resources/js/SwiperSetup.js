@@ -16,6 +16,11 @@ export function initSwiper() {
         }
     });
 
+    document.addEventListener("DOMContentLoaded", function () {
+
+    });
+
+
     // Cacher l'indication après un vrai swipe/touch
     const swipeHint = document.getElementById("swipe-hint");
 

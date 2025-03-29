@@ -15,6 +15,10 @@ use App\Models\RendezVous;
 use Livewire\Livewire;
 use App\Http\Controllers\GitHubController;
 use App\Http\Controllers\HomeController;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,6 +27,43 @@ use App\Http\Controllers\HomeController;
 Route::get('/rendezvous/confirmation', function () {
     return view('rendezvous.confirmation');
 })->name('rendezvous.confirm');
+
+Route::get('auth/{provider}', function ($provider) {
+    return Socialite::driver($provider)->redirect();
+});
+
+Route::get('auth/{provider}/callback', function ($provider) {
+    try {
+        $socialUser = Socialite::driver($provider)->user();
+
+        // Vérifier si l'utilisateur existe déjà
+        $user = User::where('provider_id', $socialUser->getId())
+            ->orWhere('email', $socialUser->getEmail())
+            ->first();
+
+        if (!$user) {
+            // Créer un nouvel utilisateur
+            $user = User::create([
+                'name' => $socialUser->getName(),
+                'email' => $socialUser->getEmail(),
+                'provider' => $provider,
+                'provider_id' => $socialUser->getId(),
+                'avatar' => $socialUser->getAvatar(),
+                'password' => bcrypt(uniqid()), // Générer un mot de passe aléatoire
+            ]);
+        }
+
+        // Connecter l'utilisateur
+        Auth::login($user);
+
+        return redirect('/dashboard')->with('success', 'Connexion réussie !');
+
+    } catch (\Exception $e) {
+        return redirect('/login')->with('error', 'Erreur lors de l’authentification : ' . $e->getMessage());
+    }
+});
+
+
 
 // 🔹 Page d'accueil
 route::get("/", [HomeController::class, "index"])->name("home");
