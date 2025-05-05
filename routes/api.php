@@ -2,7 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\RendezVousController;
+use App\Http\Controllers\GarageReservationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,3 +18,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/garage-reservations', [GarageReservationController::class, 'apiEvents']);
+Route::get('/rendezvous', [RendezVousController::class, 'apiEvents']);
+Route::get('/rendezvous/{id}', [RendezVousController::class, 'apiShow']);
+Route::get('/garage-reservations/{id}', [GarageReservationController::class, 'apiShow']);
+

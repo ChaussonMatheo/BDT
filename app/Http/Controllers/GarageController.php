@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Garage;
+use App\Models\GarageReservation;
 use Illuminate\Http\Request;
 
 class GarageController extends Controller
@@ -10,7 +11,9 @@ class GarageController extends Controller
     public function index()
     {
         $garages = Garage::all();
-        return view('garages.index', compact('garages'));
+        $reservations = GarageReservation::with(['garage', 'prestations'])->latest()->get();
+
+        return view('garages.index', compact('garages', 'reservations'));
     }
 
     public function create()

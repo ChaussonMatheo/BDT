@@ -4,10 +4,14 @@
             <i class="fas fa-warehouse mr-2"></i> Liste des Garages
         </h2>
 
-        <!-- Bouton d'ajout -->
-        <div class="flex justify-end mb-6">
+
+        <!-- Boutons d'ajout -->
+        <div class="flex justify-end mb-6 gap-2">
             <a href="{{ route('garages.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus mr-2"></i> Ajouter un garage
+            </a>
+            <a href="{{ route('garage-reservations.create') }}" class="btn btn-secondary">
+                <i class="fas fa-calendar-plus mr-2"></i> Ajouter réservation garage
             </a>
         </div>
 
@@ -57,5 +61,48 @@
                 </div>
             @endforeach
         </div>
+        <div class="divider my-10">
+            <i class="fas fa-calendar-alt mr-2 text-blue-500"></i> Réservations garage
+        </div>
+
+        <!-- Liste des réservations -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @forelse ($reservations as $reservation)
+                <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
+                    <h4 class="text-lg font-semibold text-gray-700">
+                        📍 {{ $reservation->garage->nom }}
+                    </h4>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Du {{ \Carbon\Carbon::parse($reservation->start_date)->format('d/m/Y') }}
+                        au {{ \Carbon\Carbon::parse($reservation->end_date)->format('d/m/Y') }}
+                    </p>
+
+                    <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                        @foreach ($reservation->prestations as $prestation)
+                            <li class="flex justify-between">
+                                <span>{{ $prestation->description }}</span>
+                                <span class="font-medium">{{ number_format($prestation->montant, 2, ',', ' ') }} €</span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="mt-3 flex justify-end gap-2">
+                        <a href="{{ route('garage-reservations.edit', $reservation->id) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit mr-2"></i> Modifier
+                        </a>
+                        <a href="{{ route('garage-reservations.facture', $reservation->id) }}" target="_blank" class="btn btn-neutral btn-sm">
+                            <i class="fas fa-file-invoice mr-2"></i> Facture PDF
+                        </a>
+                    </div>
+
+                </div>
+            @empty
+                <p class="text-gray-500 col-span-3">Aucune réservation enregistrée.</p>
+            @endforelse
+        </div>
+    </div> <!-- fin du grid des garages -->
+
+
+
     </div>
 </x-app-layout>

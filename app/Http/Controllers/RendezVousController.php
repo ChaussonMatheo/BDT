@@ -248,5 +248,57 @@ class RendezVousController extends Controller
             ->header('Content-Disposition', 'attachment; filename=\"rendezvous.ics\""');
     }
 
+    public function apiEvents()
+    {
+        // L'admin voit tout, les autres seulement leurs rendez-vous
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            $rendezVous = RendezVous::with('prestation')->get();
+        } else {
+            $rendezVous = RendezVous::where('user_id', Auth::id())
+                ->with('prestation')
+                ->get();
+        }
+
+        $events = $rendezVous->map(function ($rdv) {
+            $start = Carbon::parse($rdv->date_heure);
+            $end = (clone $start)->addMinutes(optional($rdv->prestation)->duree ?? 60);
+
+            return [
+                'id' => $rdv->id,
+                'title' => $rdv->prestation->service ?? 'Rendez-vous',
+                'start' => $start->toIso8601String(),
+                'end' => $end->toIso8601String(),
+                'color' => match ($rdv->statut) {
+                    'confirmé' => '#16a34a',
+                    'annulé' => '#dc2626',
+                    default => '#3b82f6',
+                },
+                'client' => $rdv->user->name ?? $rdv->guest_name ?? 'Client invité',
+                'voiture' => $rdv->type_de_voiture ?? 'Non précisé',
+                'statut' => $rdv->statut ?? 'Non précisé',
+            ];
+        });
+
+        return response()->json($events);
+    }
+    public function apiShow($id)
+    {
+        $rdv = RendezVous::with(['prestation', 'user'])->findOrFail($id);
+
+        return response()->json([
+            'id' => $rdv->id,
+            'date_heure' => \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y H:i'),
+            'statut' => ucfirst($rdv->statut),
+            'client' => $rdv->user->name ?? $rdv->guest_name ?? 'Client invité',
+            'email' => $rdv->user->email ?? $rdv->guest_email ?? 'Non renseigné',
+            'telephone' => $rdv->user->phone ?? $rdv->guest_phone ?? 'Non renseigné',
+            'prestation' => $rdv->prestation->service ?? 'Non spécifiée',
+            'tarif' => $rdv->tarif ? number_format($rdv->tarif, 2, ',', ' ') . ' €' : 'Non renseigné',
+            'voiture' => $rdv->type_de_voiture ?? 'Non précisée',
+        ]);
+    }
+
+
+
 
 }

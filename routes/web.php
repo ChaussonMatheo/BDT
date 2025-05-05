@@ -11,11 +11,13 @@ use App\Http\Controllers\RendezVousController;
 use App\Livewire\WizardRendezVous;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GarageReservationController;
 use App\Models\RendezVous;
 use Livewire\Livewire;
 use App\Http\Controllers\GitHubController;
 use App\Http\Controllers\HomeController;
 use Laravel\Socialite\Facades\Socialite;
+
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -146,6 +148,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/reservations-garage/create', [GarageReservationController::class, 'create'])->name('garage-reservations.create');
+Route::post('/reservations-garage', [GarageReservationController::class, 'store'])->name('garage-reservations.store');
+Route::get('/reservations-garage/{id}/edit', [GarageReservationController::class, 'edit'])->name('garage-reservations.edit');
+Route::put('/reservations-garage/{id}', [GarageReservationController::class, 'update'])->name('garage-reservations.update');
+Route::get('/reservations-garage/{id}/facture', [GarageReservationController::class, 'facture'])->name('garage-reservations.facture');
+
 
 // 🔹 Authentification Laravel (register, login, logout)
 require __DIR__.'/auth.php';
