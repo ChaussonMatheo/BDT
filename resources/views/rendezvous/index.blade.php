@@ -4,33 +4,28 @@
         <!-- Barre d'outils -->
         <!-- Barre d'outils -->
         <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-            <!-- Tri -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 w-full sm:w-auto">
-                <label class="font-semibold text-gray-700">Trier par :</label>
-                <select id="sortOption" class="select select-bordered w-full sm:w-auto">
-                    <option value="date_heure">Date</option>
-                    <option value="statut">Statut</option>
-                    <option value="service">Service</option>
-                    <option value="type_de_voiture">Type de véhicule</option>
-                </select>
-            </div>
+            <form method="GET" action="{{ route('rendezvous.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                <input type="hidden" name="filtre" value="{{ $filtre }}">
 
-            <!-- Recherche -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 w-full sm:w-auto">
-                <label class="font-semibold text-gray-700">Rechercher :</label>
-                <input type="text" id="searchInput" class="input input-bordered w-full sm:w-64 lg:w-80" placeholder="Rechercher un rendez-vous...">
-            </div>
-
-            <!-- Filtre par statut -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 w-full sm:w-auto">
-                <label class="font-semibold text-gray-700">Statut :</label>
-                <select id="statusFilter" class="select select-bordered w-full sm:w-auto">
-                    <option value="all">Tous</option>
-                    <option value="confirmé">Confirmé</option>
-                    <option value="annulé">Annulé</option>
-                    <option value="en attente">En attente</option>
+                <select name="sort" class="select select-bordered w-full">
+                    <option value="date_heure" {{ $sort === 'date_heure' ? 'selected' : '' }}>Date</option>
+                    <option value="statut" {{ $sort === 'statut' ? 'selected' : '' }}>Statut</option>
+                    <option value="service" {{ $sort === 'service' ? 'selected' : '' }}>Service</option>
+                    <option value="type_de_voiture" {{ $sort === 'type_de_voiture' ? 'selected' : '' }}>Type de véhicule</option>
                 </select>
-            </div>
+
+                <input name="search" value="{{ $search }}" type="text" class="input input-bordered w-full" placeholder="Rechercher...">
+
+                <select name="statut" class="select select-bordered w-full">
+                    <option value="all" {{ $statut === 'all' ? 'selected' : '' }}>Tous</option>
+                    <option value="confirmé" {{ $statut === 'confirmé' ? 'selected' : '' }}>Confirmé</option>
+                    <option value="annulé" {{ $statut === 'annulé' ? 'selected' : '' }}>Annulé</option>
+                    <option value="en attente" {{ $statut === 'en attente' ? 'selected' : '' }}>En attente</option>
+                </select>
+
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </form>
+
 
             <!-- Bouton Ajouter -->
             <div class="flex justify-end w-full sm:w-auto">
@@ -47,18 +42,17 @@
             <p class="text-gray-600 text-center">Aucun rendez-vous trouvé.</p>
         @else
             <div role="tablist" class="tabs tabs-bordered tabs-sm w-full mb-6 max-w-xs mx-auto flex justify-center">
-                <a role="tab" onclick="switchTab('upcoming')" class="tab tab-active text-gray-600">À venir
-                </a>
-                <a role="tab" onclick="switchTab('past')" class="tab text-gray-600">Passés
-
-                </a>
+                <a role="tab" href="{{ route('rendezvous.index', ['filtre' => 'upcoming']) }}"
+                   class="tab {{ $filtre === 'upcoming' ? 'tab-active' : '' }} text-gray-600">À venir</a>
+                <a role="tab" href="{{ route('rendezvous.index', ['filtre' => 'past']) }}"
+                   class="tab {{ $filtre === 'past' ? 'tab-active' : '' }} text-gray-600">Passés</a>
             </div>
 
 
                 <!-- Début section des rendez-vous à venir -->
-                <div id="upcoming" class="rendezvous-list">
+                <div class="rendezvous-list">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @foreach ($rendezVous->where('date_heure', '>=', now()) as $index => $rdv)
+                        @foreach ($rendezVous as $index => $rdv)
                             <!-- Début carte rendez-vous -->
                             <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
                                 <!-- En-tête : Numéro du rendez-vous + Date -->
@@ -190,134 +184,8 @@
                         @endforeach
                     </div>
                 </div>
-                <!-- Fin section des rendez-vous à venir -->
-                <!-- Début section des rendez-vous passés -->
-                <div id="past" class="rendezvous-list hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @foreach ($rendezVous->where('date_heure', '<', now()) as $index => $rdv)
-                            <!-- Début carte rendez-vous -->
-                            <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
-                                <!-- En-tête : Numéro du rendez-vous + Date -->
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                                        <i class="fas fa-hashtag text-gray-500 mr-2"></i>
-                                        {{ $index + 1 }} - {{ \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y H:i') }}
-                                    </h3>
+                <!-- Fin section des rendez-vous -->
 
-                                    <!-- Avatar du client en haut à droite -->
-                                    <div class="relative group">
-                                        <div class="w-10 h-10 rounded-full overflow-hidden border border-gray-300 shadow-sm">
-                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($rdv->user ? $rdv->user->name : $rdv->guest_name) }}&background=random&color=fff" alt="Avatar">
-                                        </div>
-
-                                        <!-- Affichage du nom au survol -->
-                                        <div class="absolute top-0 right-12 bg-gray-800 text-white text-sm px-3 py-1 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                                            {{ $rdv->user ? $rdv->user->name : $rdv->guest_name }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Début des détails du rendez-vous -->
-                                <div class="space-y-2">
-                                    <!-- Informations client -->
-                                    <p class="text-gray-600 text-sm flex items-center">
-                                        <i class="fas fa-user text-purple-500 mr-2"></i>
-                                        <span class="font-medium">Client :</span>
-                                        @if($rdv->user)
-                                            {{ $rdv->user->name }}
-                                        @else
-                                            {{ $rdv->guest_name ?? 'Non renseigné' }}
-                                        @endif
-                                    </p>
-
-                                    <p class="text-gray-600 text-sm flex items-center">
-                                        <i class="fas fa-envelope text-blue-500 mr-2"></i>
-                                        <span class="font-medium">Email : </span>
-                                        @if($rdv->user)
-                                            {{ $rdv->user->email }}
-                                        @else
-                                            {{ $rdv->guest_email ?? 'Non renseigné' }}
-                                        @endif
-                                    </p>
-
-                                    <p class="text-gray-600 text-sm flex items-center">
-                                        <i class="fas fa-phone text-blue-500 mr-2"></i>
-                                        <span class="font-medium">Téléphone : </span>
-                                        @if($rdv->user)
-                                            {{ $rdv->user->phone }}
-                                        @else
-                                            {{ $rdv->guest_phone ?? 'Non renseigné' }}
-                                        @endif
-                                    </p>
-
-                                    <!-- Informations service -->
-                                    @if($rdv->prestation)
-                                        <p class="text-gray-600 text-sm flex items-center">
-                                            <i class="fas fa-tools text-green-500 mr-2"></i>
-                                            <span class="font-medium">Service : </span> {{ $rdv->prestation->service }}
-                                        </p>
-
-                                        <p class="text-gray-600 text-sm flex items-center">
-                                            @php
-                                                $icons = [
-                                                    'petite_voiture' => ['icon' => 'fa-car-side', 'color' => 'text-blue-500', 'label' => 'Petite voiture'],
-                                                    'berline' => ['icon' => 'fa-car', 'color' => 'text-indigo-500', 'label' => 'Berline'],
-                                                    'suv_4x4' => ['icon' => 'fa-truck-monster', 'color' => 'text-red-500', 'label' => 'SUV / 4x4'],
-                                                ];
-                                                $type = $icons[$rdv->type_de_voiture] ?? ['icon' => 'fa-car', 'color' => 'text-gray-500', 'label' => 'Non spécifié'];
-                                            @endphp
-
-                                            <i class="fas {{ $type['icon'] }} {{ $type['color'] }} mr-2 text-lg"></i>
-                                            <span class="font-medium">Type de véhicule :</span>
-                                            <span class="{{ $type['color'] }} font-semibold ml-1">{{ $type['label'] }}</span>
-                                        </p>
-
-                                        <p class="text-gray-600 text-sm flex items-center">
-                                            <i class="fas fa-tag text-red-500 mr-2"></i>
-                                            <span class="font-medium">Tarif :</span> {{ $rdv->tarif }} €
-                                        </p>
-                                    @endif
-
-                                    <!-- Statut -->
-                                    @if($rdv->statut)
-                                        <p class="text-sm flex items-center font-semibold
-                        {{ $rdv->statut === 'confirmé' ? 'text-green-600' :
-                           ($rdv->statut === 'annulé' ? 'text-red-600' :
-                           ($rdv->statut === 'refusé' ? 'text-gray-600' : 'text-yellow-600')) }}">
-
-                                            @if($rdv->statut === 'confirmé')
-                                                ✅ <span class="ml-2">Confirmé</span>
-                                            @elseif($rdv->statut === 'annulé')
-                                                ❌ <span class="ml-2">Annulé</span>
-                                            @else
-                                                ⏳ <span class="ml-2">En attente</span>
-                                            @endif
-                                        </p>
-                                    @endif
-
-                                    <!-- Gestion admin -->
-                                    @if(Auth::user()->role === 'admin')
-                                        <div class="mt-4 flex items-center justify-between">
-
-                                            <!-- Suppression -->
-                                            <form action="{{ route('rendezvous.destroy', $rdv->id) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-ghost btn-sm mt-6 text-red-500 hover:text-red-700"
-                                                        onclick="return confirm('Supprimer ce rendez-vous ?')">
-                                                    <i class="fas fa-trash-alt text-xl"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @endif
-                                </div>
-                                <!-- Fin des détails du rendez-vous -->
-                            </div>
-                            <!-- Fin carte rendez-vous -->
-                        @endforeach
-                    </div>
-                </div>
-                <!-- Fin section des rendez-vous passés -->
     </div>
             @endif
     <div id="toast-container" class="fixed bottom-5 right-5 flex flex-col space-y-2 z-50"></div>
@@ -335,8 +203,6 @@
         const sortOption = document.getElementById("sortOption");
         const statusFilter = document.getElementById("statusFilter");
 
-        const upcomingTab = document.querySelector('[onclick="switchTab(\'upcoming\')"]');
-        const pastTab = document.querySelector('[onclick="switchTab(\'past\')"]');
 
         const upcomingSection = document.getElementById("upcoming");
         const pastSection = document.getElementById("past");
@@ -344,90 +210,8 @@
         const upcomingCount = document.getElementById("upcoming-count");
         const pastCount = document.getElementById("past-count");
 
-        // Fonction pour basculer entre les onglets avec animation
-        function switchTab(tab) {
-            const activeTab = tab === "upcoming" ? upcomingSection : pastSection;
-            const inactiveTab = tab === "upcoming" ? pastSection : upcomingSection;
 
-            // Ajoute une animation de fondu et de glissement
-            inactiveTab.classList.add("opacity-0", "translate-x-10");
-            setTimeout(() => {
-                inactiveTab.classList.add("hidden");
-                activeTab.classList.remove("hidden");
-                setTimeout(() => activeTab.classList.remove("opacity-0", "translate-x-10"), 100);
-            }, 200);
 
-            // Gérer l'activation des onglets
-            upcomingTab.classList.toggle("tab-active", tab === "upcoming");
-            pastTab.classList.toggle("tab-active", tab === "past");
-        }
-
-        // Fonction pour filtrer et trier les rendez-vous
-        function filterAppointments() {
-            let searchText = searchInput.value.toLowerCase();
-            let sortValue = sortOption.value;
-            let statusValue = statusFilter.value;
-
-            let allAppointments = document.querySelectorAll(".rendezvous-list .card");
-
-            let sortedAppointments = Array.from(allAppointments);
-
-            // Appliquer le tri
-            sortedAppointments.sort((a, b) => {
-                let aValue = getSortValue(a, sortValue);
-                let bValue = getSortValue(b, sortValue);
-
-                if (sortValue === "date_heure") {
-                    return new Date(aValue) - new Date(bValue);
-                } else {
-                    return aValue.localeCompare(bValue);
-                }
-            });
-
-            // Appliquer le filtrage
-            let upcomingCountValue = 0;
-            let pastCountValue = 0;
-
-            sortedAppointments.forEach((card) => {
-                let clientName = card.querySelector(".text-gray-600")?.innerText.toLowerCase() || "";
-                let status = card.querySelector(".font-semibold")?.innerText.toLowerCase() || "";
-
-                let matchesSearch = clientName.includes(searchText);
-                let matchesStatus = statusValue === "all" || status.includes(statusValue);
-
-                let dateText = card.querySelector("h3")?.innerText.split("-")[1]?.trim();
-                let appointmentDate = new Date(dateText);
-
-                if (matchesSearch && matchesStatus) {
-                    if (appointmentDate >= new Date()) {
-                        upcomingCountValue++;
-                    } else {
-                        pastCountValue++;
-                    }
-                    card.classList.remove("hidden");
-                } else {
-                    card.classList.add("hidden");
-                }
-            });
-
-            // Réorganiser les rendez-vous dans le DOM
-            let containerUpcoming = document.querySelector("#upcoming .grid");
-            let containerPast = document.querySelector("#past .grid");
-
-            containerUpcoming.innerHTML = "";
-            containerPast.innerHTML = "";
-
-            sortedAppointments.forEach((card) => {
-                let dateText = card.querySelector("h3")?.innerText.split("-")[1]?.trim();
-                let appointmentDate = new Date(dateText);
-
-                if (appointmentDate >= new Date()) {
-                    containerUpcoming.appendChild(card);
-                } else {
-                    containerPast.appendChild(card);
-                }
-            });
-        }
 
         // Fonction pour récupérer la valeur selon l'option de tri
         function getSortValue(card, sortOption) {
@@ -445,16 +229,7 @@
             }
         }
 
-        // Écouteurs d'événements
-        searchInput.addEventListener("input", filterAppointments);
-        sortOption.addEventListener("change", filterAppointments);
-        statusFilter.addEventListener("change", filterAppointments);
-        upcomingTab.addEventListener("click", () => switchTab("upcoming"));
-        pastTab.addEventListener("click", () => switchTab("past"));
 
-        // Initialisation : activer l'onglet "À venir" par défaut et appliquer le tri/filtre
-        switchTab("upcoming");
-        filterAppointments();
     });
 
 </script>

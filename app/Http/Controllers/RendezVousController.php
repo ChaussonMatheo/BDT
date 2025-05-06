@@ -18,21 +18,38 @@ use Illuminate\Support\Facades\Log;
 
 class RendezVousController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        if (Auth::user()->role === 'admin') {
-            // L'admin voit tous les rendez-vous
-            $rendezVous = RendezVous::with(['user', 'prestation'])->orderBy('date_heure', 'asc')->get();
-        } else {
-            // Un utilisateur normal voit uniquement ses rendez-vous
-            $rendezVous = RendezVous::where('user_id', Auth::id())
-                ->with(['prestation'])
-                ->orderBy('date_heure', 'asc')
-                ->get();
+        $now = now();
+        $filtre = $request->get('filtre', 'upcoming'); // par défaut, 'à venir'
+        $statut = $request->get('statut');
+        $search = $request->get('search');
+        $sort = $request->get('sort', 'date_heure');
+
+        $query = RendezVous::with(['user', 'prestation']);
+
+        if ($filtre === 'upcoming') {
+            $query->where('date_heure', '>=', $now);
+        } elseif ($filtre === 'past') {
+            $query->where('date_heure', '<', $now);
         }
 
-        return view('rendezvous.index', compact('rendezVous'));
+        if ($statut && $statut !== 'all') {
+            $query->where('statut', $statut);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
+                    ->orWhere('guest_name', 'like', "%{$search}%");
+            });
+        }
+
+        $rendezVous = $query->orderBy($sort)->get();
+
+        return view('rendezvous.index', compact('rendezVous', 'filtre', 'statut', 'search', 'sort'));
     }
+
 
 
     public function create()
