@@ -10,10 +10,11 @@ use App\Http\Controllers\EventController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Mail\UpdateStatutMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-
+use App\Mail\NotificationRendezVousAdmin;
 
 
 class RendezVousController extends Controller
@@ -59,9 +60,10 @@ class RendezVousController extends Controller
         return view('rendezvous.create', compact('garages', 'prestations'));
     }
 
+
     public function store(Request $request)
     {
-       $validated = $request->validate([
+        $validated = $request->validate([
             'date_heure' => 'required|date',
             'garage_id' => 'nullable|exists:garages,id',
             'prestation_id' => 'nullable|exists:prestations,id',
@@ -73,7 +75,6 @@ class RendezVousController extends Controller
 
         $user = Auth::user();
 
-        // Créer le rendez-vous
         $rendezVous = RendezVous::create([
             'user_id' => $user ? $user->id : null,
             'guest_name' => $user ? null : $request->guest_name,
@@ -85,25 +86,22 @@ class RendezVousController extends Controller
             'statut' => $request->statut,
         ]);
 
-
-        // Récupérer la durée de la prestation associée
         $prestation = Prestation::findOrFail($validated['prestation_id']);
-        $duree = $prestation->duree; // Supposons que la durée est en minutes
+        $duree = $prestation->duree;
 
-        // Calcul de la date de fin en ajoutant la durée
         $dateDebut = Carbon::parse($validated['date_heure']);
-        $dateFin = $dateDebut->addMinutes($duree);
+        $dateFin = $dateDebut->copy()->addMinutes($duree);
 
-        // Création de l'événement associé
         Event::create([
             'title' => "Rendez-vous: " . $prestation->nom,
-            'start_time' => $dateDebut, // Date de début
-            'end_time' => $dateFin, // Date de fin
+            'start_time' => $dateDebut,
+            'end_time' => $dateFin,
         ]);
 
+        $client = $user->name ?? $request->guest_name ?? 'Client invité';
+        $date = $dateDebut->format('d/m/Y H:i');
 
-
-
+        return redirect()->route('rendezvous.index')->with('success', 'Rendez-vous créé avec succès.');
     }
 
     public function edit(RendezVous $rendezVous)
@@ -267,53 +265,72 @@ class RendezVousController extends Controller
 
     public function apiEvents()
     {
-        // L'admin voit tout, les autres seulement leurs rendez-vous
-        if (Auth::check() && Auth::user()->role === 'admin') {
-            $rendezVous = RendezVous::with('prestation')->get();
-        } else {
-            $rendezVous = RendezVous::where('user_id', Auth::id())
-                ->with('prestation')
-                ->get();
-        }
+        $rdvs = RendezVous::with(['user', 'prestation'])->get();
 
-        $events = $rendezVous->map(function ($rdv) {
-            $start = Carbon::parse($rdv->date_heure);
-            $end = (clone $start)->addMinutes(optional($rdv->prestation)->duree ?? 60);
+        return response()->json($rdvs->map(function ($rdv) {
+            $client = $rdv->user->name ?? $rdv->guest_name ?? 'Client invité';
+            $voiture = match ($rdv->type_de_voiture) {
+                'petite_voiture' => 'Petite voiture',
+                'berline' => 'Berline',
+                'suv_4x4' => 'SUV / 4x4',
+                default => 'Non précisée',
+            };
+
+            $statut = ucfirst($rdv->statut ?? 'en attente');
+
+            // Couleurs pastel
+            [$bgColor, $borderColor] = match (strtolower($rdv->statut)) {
+                'confirmé'   => ['#bbf7d0', '#22c55e'],
+                'annulé'     => ['#fecaca', '#ef4444'],
+                'refusé'     => ['#e5e7eb', '#6b7280'],
+                default      => ['#dbeafe', '#3b82f6'],
+            };
 
             return [
                 'id' => $rdv->id,
-                'title' => $rdv->prestation->service ?? 'Rendez-vous',
-                'start' => $start->toIso8601String(),
-                'end' => $end->toIso8601String(),
-                'color' => match ($rdv->statut) {
-                    'confirmé' => '#16a34a',
-                    'annulé' => '#dc2626',
-                    default => '#3b82f6',
-                },
-                'client' => $rdv->user->name ?? $rdv->guest_name ?? 'Client invité',
-                'voiture' => $rdv->type_de_voiture ?? 'Non précisé',
-                'statut' => $rdv->statut ?? 'Non précisé',
+                'title' => $client,
+                'start' => $rdv->date_heure,
+                'end' => \Carbon\Carbon::parse($rdv->date_heure)->addMinutes(45)->toDateTimeString(),
+                'backgroundColor' => $bgColor,
+                'borderColor' => $borderColor,
+                'extendedProps' => [
+                    'type' => 'rdv',
+                    'client' => $client,
+                    'email' => $rdv->user->email ?? $rdv->guest_email ?? 'Non renseigné',
+                    'telephone' => $rdv->user->phone ?? $rdv->guest_phone ?? 'Non renseigné',
+                    'prestation' => $rdv->prestation->service ?? 'Non spécifiée',
+                    'tarif' => $rdv->tarif ? number_format($rdv->tarif, 2, ',', ' ') . ' €' : 'Non renseigné',
+                    'voiture' => $voiture,
+                    'statut' => $statut,
+                    'color' => $bgColor
+                ]
             ];
-        });
-
-        return response()->json($events);
+        }));
     }
     public function apiShow($id)
     {
         $rdv = RendezVous::with(['prestation', 'user'])->findOrFail($id);
 
+        $typeVoiture = match ($rdv->type_de_voiture) {
+            'petite_voiture' => 'Petite voiture',
+            'berline' => 'Berline',
+            'suv_4x4' => 'SUV / 4x4',
+            default => 'Non précisée',
+        };
+
         return response()->json([
             'id' => $rdv->id,
             'date_heure' => \Carbon\Carbon::parse($rdv->date_heure)->format('d/m/Y H:i'),
-            'statut' => ucfirst($rdv->statut),
+            'statut' => ucfirst($rdv->statut ?? 'en attente'),
             'client' => $rdv->user->name ?? $rdv->guest_name ?? 'Client invité',
             'email' => $rdv->user->email ?? $rdv->guest_email ?? 'Non renseigné',
             'telephone' => $rdv->user->phone ?? $rdv->guest_phone ?? 'Non renseigné',
             'prestation' => $rdv->prestation->service ?? 'Non spécifiée',
             'tarif' => $rdv->tarif ? number_format($rdv->tarif, 2, ',', ' ') . ' €' : 'Non renseigné',
-            'voiture' => $rdv->type_de_voiture ?? 'Non précisée',
+            'voiture' => $typeVoiture,
         ]);
     }
+
 
 
 

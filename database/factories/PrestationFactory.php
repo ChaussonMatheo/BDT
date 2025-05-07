@@ -12,8 +12,8 @@ class PrestationFactory extends Factory
     public function definition()
     {
         return [
-            'nom' => $this->faker->word(), // Nom aléatoire
-            'duree' => $this->faker->numberBetween(30, 120), // Durée entre 30 et 120 min
+            'service' => $this->faker->word(), // Nom aléatoire
+            'duree_estimee' => $this->faker->numberBetween(30, 120), // Durée entre 30 et 120 min
         ];
     }
 }

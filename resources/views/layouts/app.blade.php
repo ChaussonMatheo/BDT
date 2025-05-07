@@ -33,10 +33,12 @@
             <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4 flex flex-col justify-between">
                 <div>
                     <li class="menu-title"><i class="fas fa-user-shield"></i> Administration</li>
+                    <li><a href="{{ route('rendezvous.index') }}"><i class="fas fa-calendar-alt"></i> Mes rendez-vous</a></li>
                     <li><a href="{{ route('prestations.index') }}"><i class="fas fa-wrench"></i> Services</a></li>
                     <li><a href="{{ route('garages.index') }}"><i class="fas fa-warehouse"></i> Garages</a></li>
                     <li><a href="{{ route('admin.users') }}"><i class="fas fa-users-cog"></i> Gestion des utilisateurs</a></li>
                     <li><a href="{{ route('availabilities.index') }}"><i class="fas fa-clock"></i> Disponibilités</a></li>
+
                 </div>
 
                 <!-- Affichage de la version -->
@@ -61,23 +63,7 @@
     </main>
 
     <!-- Footer fixé en bas -->
-    <footer class="bg-gray-900 text-white text-center py-4">
-        <p class="text-sm">
-            📅 Dernière mise à jour :
-            <strong>
-                @if (!empty($data['last_updated']))
-                    {{ \Carbon\Carbon::parse($data['last_updated'])->locale('fr')->diffForHumans() }}
-                @else
-                    Non disponible
-                @endif
-            </strong>
-            |
-            📝 Dernier commit :
-            <a href="{{ $data['last_commit_url'] }}" class="text-blue-400 underline">
-                {{ $data['last_commit_message'] }}
-            </a>
-        </p>
-    </footer>
+
 </div>
 
 <!-- Toast Notification -->

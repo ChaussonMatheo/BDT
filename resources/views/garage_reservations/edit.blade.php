@@ -42,7 +42,26 @@
                 </div>
                 <button type="button" onclick="addPrestation()" class="btn btn-sm mt-2">+ Ajouter une prestation</button>
             </div>
+            <div class="mb-6">
+                <label class="label">Couleur de la réservation</label>
 
+                <input type="hidden" name="couleur" id="selected-color" value="{{ $reservation->couleur ?? '#2196f3' }}">
+
+                <div class="flex flex-wrap gap-2 mt-2">
+                    @php
+                        $colors = ['#2196f3', '#4caf50', '#ff9800', '#f44336', '#9c27b0', '#3f51b5', '#795548', '#00bcd4', '#e91e63', '#607d8b'];
+                    @endphp
+
+                    @foreach ($colors as $color)
+                        <div
+                            class="w-8 h-8 rounded-full cursor-pointer border-2 border-transparent hover:scale-110 transition-all"
+                            style="background-color: {{ $color }};"
+                            onclick="selectColor('{{ $color }}', this)"
+                            data-color="{{ $color }}"
+                        ></div>
+                    @endforeach
+                </div>
+            </div>
             <div class="mt-6">
                 <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
             </div>
@@ -68,5 +87,28 @@
         function removePrestation(button) {
             button.closest('div').remove();
         }
+
+        function selectColor(color, element) {
+            document.getElementById('selected-color').value = color;
+
+            // Retirer la bordure des autres ronds
+            document.querySelectorAll('[data-color]').forEach(el => {
+                el.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-900');
+            });
+
+            // Ajouter une bordure au rond sélectionné
+            element.classList.add('ring-2', 'ring-offset-2', 'ring-gray-900');
+        }
+
+        // Sélectionner automatiquement la couleur enregistrée à l'affichage
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentColor = document.getElementById('selected-color').value;
+            const selected = [...document.querySelectorAll('[data-color]')]
+                .find(el => el.dataset.color.toLowerCase() === currentColor.toLowerCase());
+
+            if (selected) {
+                selectColor(currentColor, selected);
+            }
+        });
     </script>
 </x-app-layout>

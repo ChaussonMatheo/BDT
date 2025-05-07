@@ -57,6 +57,7 @@ class GarageReservationController extends Controller
             'prestations' => 'required|array|min:1',
             'prestations.*.description' => 'required|string|max:255',
             'prestations.*.montant' => 'required|numeric|min:0',
+            'couleur' => 'nullable|string|max:7', // ex : "#ff0000"
         ]);
 
         $reservation = GarageReservation::findOrFail($id);
@@ -64,6 +65,7 @@ class GarageReservationController extends Controller
             'garage_id' => $validated['garage_id'],
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
+            'couleur' => $validated['couleur'] ?? '#2196f3', // valeur par défaut si vide
         ]);
 
         $reservation->prestations()->delete(); // suppression simplifiée
@@ -71,8 +73,10 @@ class GarageReservationController extends Controller
             $reservation->prestations()->create($presta);
         }
 
-        return redirect()->route('garage-reservations.edit', $id)->with('success', 'Réservation mise à jour.');
+        return redirect()->route('garages.index', ['garage' => $reservation->garage_id])
+            ->with('success', 'Réservation mise à jour.');
     }
+
 
 
     public function facture($id)
@@ -96,11 +100,12 @@ class GarageReservationController extends Controller
                 'start' => $r->start_date,
                 'end' => \Carbon\Carbon::parse($r->end_date)->addDay()->toDateString(), // fullcalendar exclude end date
                 'allDay' => true,
-                'backgroundColor' => '#fef08a', // jaune pale
+                'backgroundColor' => '#fef08a',
                 'borderColor' => '#ca8a04',
                 'extendedProps' => [
                     'type' => 'garage',
                     'garage' => $r->garage->nom,
+                    'color' => $r->couleur ?? '#3d65c6',
                     'notes' => $r->notes,
                 ]
             ];
@@ -116,6 +121,7 @@ class GarageReservationController extends Controller
             'lieu' => $reservation->garage->lieu,
             'start' => $reservation->start_date,
             'end' => $reservation->end_date,
+
             'prestations' => $reservation->prestations->map(function ($p) {
                 return [
                     'description' => $p->description,

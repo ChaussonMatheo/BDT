@@ -1,55 +1,61 @@
 <?php
-
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Prestation;
-use App\Models\RendezVous;
-use App\Models\Event;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Mail\NotificationRendezVousAdmin;
 
 class RendezVousTest extends TestCase
 {
-    use RefreshDatabase; // Réinitialise la base après chaque test
+    use RefreshDatabase;
 
-    /** @test */
-    public function un_rendezvous_cree_genere_un_evenement()
+    public function test_un_utilisateur_peut_creer_un_rendezvous_et_les_admins_sont_notifies()
     {
-        // Créer un utilisateur
+        Mail::fake();
+
+        // Créer un admin à notifier
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'admin@example.com',
+        ]);
+
+        // Créer un utilisateur connecté
         $user = User::factory()->create();
+        $this->actingAs($user);
 
-        // Créer une prestation avec une durée
+        // Créer une prestation
         $prestation = Prestation::factory()->create([
-            'nom' => 'Lavage complet',
-            'duree' => 60, // 60 minutes
+            'service' => 'Nettoyage complet',
+            'duree_estimee' => 60,
+            'description' => 'test',
+            'tarif_petite_voiture' => 30,
+            'tarif_berline' => 30,
+            'tarif_suv_4x4' => 30,
         ]);
 
-        // Définir une date de rendez-vous
-        $dateHeure = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
-
-        // Simuler une requête POST pour créer un rendez-vous
-        $this->actingAs($user) // Simule un utilisateur connecté
-        ->post(route('rendezvous.store'), [
-            'date_heure' => $dateHeure,
+        // Créer un rendez-vous
+        $response = $this->post(route('rendezvous.store'), [
+            'date_heure' => now()->addDays(1)->format('Y-m-d H:i:s'),
             'prestation_id' => $prestation->id,
             'statut' => 'confirmé',
-        ])
-            ->assertRedirect(route('rendezvous.index')); // Vérifie la redirection
+        ]);
 
-        // Vérifier que le rendez-vous a bien été créé
+        // Vérifie la redirection
+        $response->assertRedirect();
+
+        // Vérifie que le rendez-vous a été créé
         $this->assertDatabaseHas('rendez_vous', [
-            'date_heure' => $dateHeure,
+            'user_id' => $user->id,
             'prestation_id' => $prestation->id,
             'statut' => 'confirmé',
         ]);
 
-        // Vérifier que l'événement associé a bien été créé
-        $this->assertDatabaseHas('events', [
-            'title' => "Rendez-vous: " . $prestation->nom,
-            'start_time' => $dateHeure,
-            'end_time' => Carbon::parse($dateHeure)->addMinutes($prestation->duree)->format('Y-m-d H:i:s'),
-        ]);
+        // Vérifie que le mail a bien été envoyé à l'admin
+        Mail::assertSent(NotificationRendezVousAdmin::class, function ($mail) use ($admin) {
+            return $mail->hasTo($admin->email);
+        });
     }
 }

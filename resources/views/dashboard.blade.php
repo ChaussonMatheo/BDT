@@ -5,57 +5,101 @@
         <x-page-title title="Tableau de Bord" breadcrumb="Tableau de Bord" />
 
 
-        <!-- Stats Cards -->
-        <div class="stats shadow w-full grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="stat">
-                <div class="stat-figure text-primary">
-                    <i class="fas fa-calendar-check text-4xl"></i>
-                </div>
-                <div class="stat-title">Total Rendez-vous</div>
-                <div class="stat-value text-primary">{{ $totalRendezVous }}</div>
-                <div class="stat-desc">Tous les rendez-vous enregistrés</div>
-            </div>
-
-            <div class="stat">
+        <div class="flex flex-wrap gap-4">
+            <div class="stat w-52 p-4 bg-white rounded shadow text-sm">
                 <div class="stat-figure text-green-500">
-                    <i class="fas fa-check-circle text-4xl"></i>
+                    <i class="fas fa-check-circle text-2xl"></i>
                 </div>
-                <div class="stat-title">Confirmés</div>
-                <div class="stat-value text-green-500">{{ $confirmedRendezVous }}</div>
-                <div class="stat-desc">Rendez-vous validés</div>
+                <div class="stat-title text-sm">Confirmés</div>
+                <div class="stat-value text-green-500 text-lg font-bold">{{ $confirmedRendezVous }}</div>
+                <div class="stat-desc text-xs">Validés</div>
             </div>
 
-            <div class="stat">
+            <div class="stat w-52 p-4 bg-white rounded shadow text-sm">
                 <div class="stat-figure text-red-500">
-                    <i class="fas fa-times-circle text-4xl"></i>
+                    <i class="fas fa-times-circle text-2xl"></i>
                 </div>
-                <div class="stat-title">Annulés</div>
-                <div class="stat-value text-red-500">{{ $cancelledRendezVous }}</div>
-                <div class="stat-desc">Rendez-vous supprimés</div>
+                <div class="stat-title text-sm">Annulés</div>
+                <div class="stat-value text-red-500 text-lg font-bold">{{ $cancelledRendezVous }}</div>
+                <div class="stat-desc text-xs">Supprimés</div>
             </div>
 
-            <div class="stat">
+            <div class="stat w-52 p-4 bg-white rounded shadow text-sm">
                 <div class="stat-figure text-yellow-500">
-                    <i class="fas fa-calendar-week text-4xl"></i>
+                    <i class="fas fa-calendar-week text-2xl"></i>
                 </div>
-                <div class="stat-title">Cette semaine</div>
-                <div class="stat-value text-yellow-500">{{ $rendezVousLastWeek }}</div>
-                <div class="stat-desc">RDV programmés cette semaine</div>
+                <div class="stat-title text-sm">Cette semaine</div>
+                <div class="stat-value text-yellow-500 text-lg font-bold">{{ $rendezVousLastWeek }}</div>
+                <div class="stat-desc text-xs">Programmés</div>
             </div>
+
+
+            @php
+                $max = max($revenusParJour->toArray());
+                $points = collect($revenusParJour)->map(function($val, $i) use ($max) {
+                    $x = $i * (100 / 6); // 7 points
+                    $y = 30 - ($max > 0 ? ($val / $max) * 30 : 0);
+                    return "{$x},{$y}";
+                })->implode(' ');
+            @endphp
+
+            <div class="stat w-52 p-4 bg-white rounded shadow text-sm relative overflow-hidden">
+                <div class="stat-figure text-purple-500 z-10 relative">
+                    <i class="fas fa-euro-sign text-2xl"></i>
+                </div>
+                <div class="stat-title text-sm z-10 relative">CA estimé</div>
+                <div class="stat-value text-purple-500 text-lg font-bold z-10 relative">{{ number_format($revenuTotal, 0, ',', ' ') }} €</div>
+                <div class="stat-desc text-xs z-10 relative">7 derniers jours</div>
+
+                <svg viewBox="0 0 100 30" class="absolute bottom-0 left-0 w-full h-10 opacity-20 z-0">
+                    <polyline fill="none" stroke="#9f7aea" stroke-width="2" points="{{ $points }}" />
+                </svg>
+            </div>
+
+            @php
+                $maxPresta = max($prestationsParJour->toArray());
+                $pointsPresta = collect($prestationsParJour)->map(function($val, $i) use ($maxPresta) {
+                    $x = $i * (100 / 6); // 7 jours = 7 points
+                    $y = 30 - ($maxPresta > 0 ? ($val / $maxPresta) * 30 : 0);
+                    return "{$x},{$y}";
+                })->implode(' ');
+            @endphp
+
+            <div class="stat w-52 p-4 bg-white rounded shadow text-sm relative overflow-hidden">
+                <div class="stat-figure text-gray-600 z-10 relative">
+                    <i class="fas fa-tools text-2xl"></i>
+                </div>
+                <div class="stat-title text-sm z-10 relative">Prestations</div>
+                <div class="stat-value text-gray-700 text-lg font-bold z-10 relative">{{ $totalPrestations }}</div>
+                <div class="stat-desc text-xs z-10 relative">Ce mois / 7 jours</div>
+
+                <!-- Sparkline -->
+                <svg viewBox="0 0 100 30" class="absolute bottom-0 left-0 w-full h-10 opacity-20 z-0">
+                    <polyline fill="none" stroke="#6b7280" stroke-width="2" points="{{ $pointsPresta }}" />
+                </svg>
+            </div>
+
         </div>
+
+
+
 
         <!-- Calendrier des Rendez-vous -->
-        <div class="card bg-base-100 shadow p-6 mt-8">
-            <h3 class="text-xl font-semibold mb-4 flex items-center text-primary">
+        <div class="card bg-base-100 shadow p-4 sm:p-6 mt-8 w-full">
+            <h3 class="text-lg sm:text-xl font-semibold mb-4 flex items-center text-primary">
                 <i class="fas fa-calendar-alt mr-2"></i> Calendrier
             </h3>
-            <div class="overflow-auto">
-                <div id="calendar-loader" class="flex justify-center items-center my-6 hidden">
+
+            <div class="overflow-x-auto">
+                <div id="calendar-loader" class="flex justify-center items-center my-4 sm:my-6 hidden">
                     <span class="loading loading-spinner loading-lg text-primary"></span>
                 </div>
-                <div id="calendar" class="max-w-full max-h-screen mx-auto"></div>
+
+                <div id="calendar" class="w-full" style="font-size: 0.85rem;"></div>
             </div>
         </div>
+
+
 
     </div>
     <input type="checkbox" id="modal-detail-rdv" class="modal-toggle" />
@@ -163,10 +207,19 @@
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 locale: 'fr',
                 initialView: 'dayGridMonth',
+                aspectRatio: 2,
+                contentHeight: 'auto',
+                expandRows: true,
+                dayMaxEventRows: true,
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,dayGridWeek,dayGridDay'
+                },
+                views: {
+                    dayGridMonth: {
+                        dayMaxEventRows: 3
+                    }
                 },
 
                 events: function(fetchInfo, successCallback, failureCallback) {
@@ -191,20 +244,29 @@
 
                 eventContent: function(arg) {
                     const props = arg.event.extendedProps;
-                    const isGarage = props.type === 'garage';
-
-                    if (isGarage) {
+                    console.log(arg)
+                    if (props.type === 'garage') {
                         return {
                             html: `
-                <div class="bg-blue-600 p-1 rounded text-xs">
-                    <div class="font-semibold">🔧 Réservation garage</div>
-                    <div>${props.garage}</div>
-                </div>
-            `
+                            <div class="p-1 rounded text-xs" style="background-color: ${props.color}">
+                                <div class="font-semibold">🔧 Réservation garage</div>
+                                <div>${props.garage}</div>
+                            </div>
+                        `
+                        };
+                    }
+                    else {
+                        console.log("ND")
+                    }
+
+                    // Sécurité : si données manquantes, affiche titre seul
+                    if (!props.client || !props.statut || !props.voiture) {
+                        return {
+                            html: `<div class="text-xs font-semibold">${arg.event.title}</div>`
                         };
                     }
 
-                    // RDV classique (code inchangé)
+                    // Sinon, affichage complet classique
                     const title = arg.event.title;
                     const client = props.client;
                     const voiture = props.voiture;
@@ -229,19 +291,21 @@
                     }
 
                     return {
-                                    html: `
-                    <div class="p-1 rounded-md shadow-sm text-xs leading-tight space-y-1">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid ${iconClass} text-sm"></i>
-                            <span class="font-semibold">${title}</span>
+                        html: `
+                        <div class="w-full h-full rounded-md text-xs px-2 py-1 shadow-inner"
+                             style="background-color: ${props.color}; display: flex; flex-direction: column; justify-content: center;">
+                            <div class="flex items-center gap-1 font-semibold">
+                                <i class="fa-solid ${iconClass} text-sm"></i>
+                                <span>${title}</span>
+                            </div>
+                            <div class="text-gray-800 truncate">${client}</div>
+                            <div class="text-gray-600 italic truncate">${voiture}</div>
+                            <div><span class="badge ${badgeColor} text-[10px] mt-1">${statut}</span></div>
                         </div>
-                        <div class="text-gray-700">${client}</div>
-                        <div class="text-gray-500 italic">${voiture}</div>
-                        <div><span class="badge ${badgeColor} text-[10px]">${statut}</span></div>
-                    </div>
                     `
+
                     };
-                },
+                    },
 
 
                 eventClick: function(info) {

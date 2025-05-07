@@ -9,7 +9,6 @@
                 <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[10] mt-3 w-52 p-2 shadow">
                     <li><a href="{{ route('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
                     <li><a href="{{ route('rendezvous.index') }}"><i class="fas fa-calendar-alt"></i> Mes rendez-vous</a></li>
-                    <li><a href="{{ route('planning.index') }}"><i class="fas fa-calendar"></i> Planning</a></li>
                     <li><a href="{{ route('profile.edit') }}"><i class="fas fa-user"></i> Profil</a></li>
                 </ul>
             </div>

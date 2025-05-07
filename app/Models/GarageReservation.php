@@ -16,6 +16,7 @@ class GarageReservation extends Model
         'start_date',
         'end_date',
         'notes',
+        'couleur'
     ];
 
     protected $dates = ['start_date', 'end_date'];

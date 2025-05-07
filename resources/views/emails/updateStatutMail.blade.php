@@ -2,118 +2,136 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@if($rendezVous->statut == "confirmé") Confirmation @else Annulation @endif de votre rendez-vous</title>
+    <title>{{ ucfirst($rendezVous->statut) }} de votre rendez-vous - B-CLEAN</title>
     <style>
         body {
             font-family: 'Poppins', Arial, sans-serif;
-            background-color: #ffffff; /* Vert clair DaisyUI Emerald */
+            background-color: #f6f6f6;
             margin: 0;
             padding: 0;
         }
         .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 30px auto;
             background-color: #ffffff;
-            padding: 20px;
+            padding: 30px;
+            border: 1px solid #e5e5e5;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border: 2px solid @if($rendezVous->statut == "confirmé") #10B981 @else #EF4444 @endif; /* Vert ou Rouge */
         }
         .header {
-            background-color: @if($rendezVous->statut == "confirmé") #047857 @else #B91C1C @endif; /* Vert foncé ou Rouge */
-            color: #ffffff;
             text-align: center;
-            padding: 15px;
-            border-radius: 8px 8px 0 0;
-            font-size: 22px;
-            font-weight: bold;
+            margin-bottom: 25px;
+        }
+        .header img {
+            height: 48px;
+        }
+        .header h1 {
+            font-size: 20px;
+            margin-top: 10px;
+            color: #111111;
             text-transform: uppercase;
         }
         .content {
-            padding: 20px;
+            font-size: 15px;
+            color: #111111;
+            line-height: 1.6;
+        }
+        .content h3 {
+            margin-top: 20px;
             font-size: 16px;
-            color: #333333;
-        }
-        .btn {
-            display: block;
-            width: 80%;
-            margin: 20px auto;
-            text-align: center;
-            background-color: @if($rendezVous->statut == "confirmé") #10B981 @else #F87171 @endif;
-            color: white;
-            padding: 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background 0.3s ease-in-out;
-        }
-        .btn:hover {
-            background-color: @if($rendezVous->statut == "confirmé") #059669 @else #DC2626 @endif;
-        }
-        .footer {
-            text-align: center;
-            font-size: 14px;
-            color: #777777;
-            padding: 10px;
-            border-top: 1px solid #eeeeee;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 6px;
         }
         .highlight {
-            color: @if($rendezVous->statut == "confirmé") #047857 @else #B91C1C @endif;
-            font-weight: bold;
+            font-weight: 600;
+        }
+        .btn {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 24px;
+            background-color: #111111;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #666666;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid #eeeeee;
+            padding-top: 15px;
+        }
+        ul {
+            padding-left: 18px;
+            margin: 12px 0;
+        }
+        li {
+            margin-bottom: 6px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
+
     <!-- HEADER -->
     <div class="header">
-        @if($rendezVous->statut == "confirmé")
-            ✅ Confirmation de votre rendez-vous
-        @else
-            ❌ Annulation de votre rendez-vous
-        @endif
+        <img src="https://b-clean.bzh/images/BAUDET_LOGO.svg" alt="Logo B-CLEAN">
+        <h1>
+            @if($rendezVous->statut === 'confirmé')
+                ✅ Rendez-vous confirmé
+            @elseif($rendezVous->statut === 'annulé')
+                ❌ Rendez-vous annulé
+            @else
+                ⚠️ Statut : {{ ucfirst($rendezVous->statut) }}
+            @endif
+        </h1>
     </div>
 
     <!-- CONTENU -->
     <div class="content">
         <p>Bonjour <span class="highlight">{{ $rendezVous->guest_name ?? $rendezVous->user->name }}</span>,</p>
 
-        @if($rendezVous->statut == "confirmé")
-            <p>Votre rendez-vous a bien été <strong>confirmé</strong> chez <strong>BDT</strong>.</p>
-        @else
+        @if($rendezVous->statut === 'confirmé')
+            <p>Votre rendez-vous chez <strong>B-CLEAN Detailing</strong> a bien été <strong>confirmé</strong>.</p>
+        @elseif($rendezVous->statut === 'annulé')
             <p>Nous sommes désolés, votre rendez-vous a été <strong>annulé</strong>.</p>
-            <p>Vous pouvez reprendre rendez-vous à tout moment en cliquant sur le bouton ci-dessous.</p>
+            <p>Vous pouvez reprendre rendez-vous à tout moment via le lien ci-dessous.</p>
+        @else
+            <p>Le statut de votre rendez-vous est actuellement : <strong>{{ ucfirst($rendezVous->statut) }}</strong>.</p>
         @endif
 
-        <h3 class="highlight">Détails du rendez-vous :</h3>
+        <h3>Détails du rendez-vous</h3>
         <ul>
-            <li><strong>Date : </strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->translatedFormat('l d F Y') }}</li>
-            <li><strong>Heure : </strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->format('H:i') }}</li>
-            <li><strong>Prestation : </strong> {{ $rendezVous->prestation->service }}</li>
-            <li><strong>Statut : </strong> <span class="highlight">{{ ucfirst($rendezVous->statut) }}</span></li>
+            <li><strong>Date :</strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->translatedFormat('l d F Y') }}</li>
+            <li><strong>Heure :</strong> {{ \Carbon\Carbon::parse($rendezVous->date_heure)->format('H:i') }}</li>
+            <li><strong>Prestation :</strong> {{ $rendezVous->prestation->service }}</li>
+            <li><strong>Statut :</strong> {{ ucfirst($rendezVous->statut) }}</li>
         </ul>
 
-        @if($rendezVous->statut == "confirmé")
-            <p>Vous pouvez gérer votre rendez-vous en cliquant sur le bouton ci-dessous :</p>
+        @if($rendezVous->statut === 'confirmé')
+            <p>Vous pouvez gérer votre rendez-vous à tout moment :</p>
             <a href="{{ $manageUrl }}" class="btn">Gérer mon rendez-vous</a>
             <a href="{{ $icsLink }}" class="btn">📅 Ajouter à mon calendrier</a>
-        @else
+        @elseif($rendezVous->statut === 'annulé')
             <a href="{{ url('/rendezVous/create') }}" class="btn">📆 Prendre un nouveau rendez-vous</a>
         @endif
 
-        <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+        <p>Pour toute question, vous pouvez nous contacter via notre site.</p>
 
-        <p>À très bientôt chez <strong>BDT Detailing</strong> !</p>
+        <p>À bientôt,<br>L'équipe <strong>B-CLEAN Detailing</strong></p>
     </div>
 
     <!-- FOOTER -->
     <div class="footer">
-        &copy; {{ date('Y') }} BDT Detailing - Tous droits réservés. <br>
-        <a href="{{ url('/') }}">Visitez notre site</a> |
-        <a href="{{ url('/contact') }}">Nous contacter</a>
+        &copy; {{ date('Y') }} B-CLEAN Detailing — Tous droits réservés<br>
+        <a href="{{ url('/') }}">Site web</a> |
+        <a href="mailto:contact@b-clean.bzh">Contact</a>
     </div>
+
 </div>
 
 </body>
