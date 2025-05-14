@@ -15,6 +15,8 @@ use App\Http\Controllers\GarageReservationController;
 use App\Models\RendezVous;
 use Livewire\Livewire;
 use App\Http\Controllers\GitHubController;
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\HomeController;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -66,6 +68,13 @@ Route::get('auth/{provider}/callback', function ($provider) {
 });
 
 
+Route::prefix('up')->group(function () {
+    Route::get('/uploads', [AdminUploadController::class, 'index'])->name('admin.uploads.index');
+    Route::get('/uploads/create', [AdminUploadController::class, 'create'])->name('admin.uploads.create');
+    Route::post('/uploads', [AdminUploadController::class, 'store'])->name('admin.uploads.store');
+    Route::get('/uploads/{upload}', [AdminUploadController::class, 'show'])->name('admin.uploads.show');
+    Route::delete('/uploads/{upload}', [AdminUploadController::class, 'destroy'])->name('admin.uploads.destroy');
+});
 
 // 🔹 Page d'accueil
 route::get("/", [HomeController::class, "index"])->name("home");
@@ -75,6 +84,11 @@ Route::prefix('events')->group(function () {
     Route::post('/', [EventController::class, 'store']);
     Route::delete('/{id}', [EventController::class, 'destroy']);
 });
+Route::get('/upload/{uuid}', [UploadController::class, 'showForm']);
+Route::post('/upload/{uuid}', [UploadController::class, 'storeImages']);
+
+Route::get('/admin/uploads', [AdminController::class, 'index']); // liste uploads
+Route::get('/admin/uploads/{id}', [AdminController::class, 'show']); // voir les images
 
 // 🔹 Gestion des garages et prestations
 Route::resource('garages', GarageController::class);
