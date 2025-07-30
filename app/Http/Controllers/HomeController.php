@@ -12,8 +12,8 @@ class HomeController extends Controller
         $services = Prestation::all();
 
         // Récupérer les images qui ont une position définie, triées par position
+        $homeImage = "";
 
-
-        return view('welcome', compact('services', ));
+        return view('welcome', compact('services', 'homeImage' ));
     }
 }
