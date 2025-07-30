@@ -169,19 +169,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/reservations-garage/create', [GarageReservationController::class, 'create'])->name('garage-reservations.create');
-Route::post('/reservations-garage', [GarageReservationController::class, 'store'])->name('garage-reservations.store');
-Route::get('/reservations-garage/{id}/edit', [GarageReservationController::class, 'edit'])->name('garage-reservations.edit');
-Route::put('/reservations-garage/{id}', [GarageReservationController::class, 'update'])->name('garage-reservations.update');
-Route::get('/reservations-garage/{id}/facture', [GarageReservationController::class, 'facture'])->name('garage-reservations.facture');
 
 
 // 🔹 Authentification Laravel (register, login, logout)
 require __DIR__.'/auth.php';
 Route::middleware(['auth', 'admin'])->group(function () {
-    // Routes pour la gestion des paramètres
+    Route::get('/reservations-garage/create', [GarageReservationController::class, 'create'])->name('garage-reservations.create');
+    Route::post('/reservations-garage', [GarageReservationController::class, 'store'])->name('garage-reservations.store');
+    Route::get('/reservations-garage/{id}/edit', [GarageReservationController::class, 'edit'])->name('garage-reservations.edit');
+    Route::put('/reservations-garage/{id}', [GarageReservationController::class, 'update'])->name('garage-reservations.update');
+    Route::get('/reservations-garage/{id}/facture', [GarageReservationController::class, 'facture'])->name('garage-reservations.facture');
+    Route::post('/reservations-garage/{id}/envoyer-facture', [GarageReservationController::class, 'envoyerFacture'])->name('garage-reservations.envoyer-facture');
+
+
+
+
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
 });
-
-

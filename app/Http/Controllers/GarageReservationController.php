@@ -8,6 +8,8 @@ use App\Models\GarageReservation;
 use App\Models\GarageReservationPrestation;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Mail\FactureGarageMail;
+use Illuminate\Support\Facades\Mail;
 
 
 class GarageReservationController extends Controller
@@ -90,8 +92,9 @@ class GarageReservationController extends Controller
 
         $pdf = Pdf::loadView('garage_reservations.facture', compact('reservation', 'legal_emetteur', 'legal_siret', 'legal_iban'))
             ->setPaper('A4');
-
-        return $pdf->download("Facture-Garage-{$reservation->id}.pdf");
+        $startDate = \Carbon\Carbon::parse($reservation->start_date)->format('Y-m-d');
+        $garageName = preg_replace('/[^a-zA-Z0-9-_]/', '_', $reservation->garage->nom);
+        return $pdf->stream("Facture-{$garageName}" . $startDate .  "_" . ".pdf");
     }
 
     public function apiEvents()
@@ -135,6 +138,31 @@ class GarageReservationController extends Controller
             }),
             'total' => number_format($reservation->prestations->sum('montant'), 2, ',', ' ') . ' €'
         ]);
+    }
+
+    public function envoyerFacture(Request $request, $id)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $reservation = GarageReservation::with(['garage', 'prestations'])->findOrFail($id);
+
+        // Récupération des paramètres légaux
+        $legal_emetteur = \App\Models\Setting::getValue('legal_emetteur', 'ND');
+        $legal_siret = \App\Models\Setting::getValue('legal_siret', 'ND');
+        $legal_iban = \App\Models\Setting::getValue('legal_iban', 'ND');
+
+        // Génération du PDF
+        $pdf = Pdf::loadView('garage_reservations.facture', compact('reservation', 'legal_emetteur', 'legal_siret', 'legal_iban'))
+            ->setPaper('A4');
+
+        $pdfContent = $pdf->output();
+
+        // Envoi de l'email
+        Mail::to($request->email)->send(new FactureGarageMail($reservation, $pdfContent));
+
+        return back()->with('success', 'Facture envoyée avec succès à ' . $request->email);
     }
 
 

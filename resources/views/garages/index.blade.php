@@ -66,7 +66,7 @@
         </div>
 
         <!-- Liste des réservations -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6">
             @forelse ($reservations as $reservation)
                 <div class="card bg-base-100 shadow-lg p-6 border border-gray-200">
                     <h4 class="text-lg font-semibold text-gray-700">
@@ -93,6 +93,9 @@
                         <a href="{{ route('garage-reservations.facture', $reservation->id) }}" target="_blank" class="btn btn-neutral btn-sm">
                             <i class="fas fa-file-invoice mr-2"></i> Facture PDF
                         </a>
+                        <button onclick="openEmailModal({{ $reservation->id }})" class="btn btn-info btn-sm">
+                            <i class="fas fa-envelope mr-2"></i> Envoyer par email
+                        </button>
                     </div>
 
                 </div>
@@ -102,7 +105,51 @@
         </div>
     </div> <!-- fin du grid des garages -->
 
+    <!-- Modal pour envoyer la facture par email -->
+    <div id="emailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Envoyer la facture par email</h3>
+                <form id="emailForm" method="POST" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 text-left">Adresse email :</label>
+                        <input type="email" name="email" id="email" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeEmailModal()"
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Annuler
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Envoyer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        function openEmailModal(reservationId) {
+            document.getElementById('emailModal').classList.remove('hidden');
+            document.getElementById('emailForm').action = `/reservations-garage/${reservationId}/envoyer-facture`;
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').classList.add('hidden');
+            document.getElementById('email').value = '';
+        }
+
+        // Fermer le modal en cliquant à l'extérieur
+        document.getElementById('emailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmailModal();
+            }
+        });
+    </script>
 
     </div>
 </x-app-layout>
