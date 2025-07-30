@@ -23,6 +23,7 @@ class RendezVous extends Model
         'guest_phone',
         'tarif',
         'type_de_voiture',
+        'prestation_libre',
     ];
 
     protected $dates = ['date_heure'];

@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Mail\UpdateStatutMail;
 use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use App\Mail\NotificationRendezVousAdmin;
 
@@ -21,34 +22,21 @@ class RendezVousController extends Controller
 {
     public function index(Request $request)
     {
-        $now = now();
-        $filtre = $request->get('filtre', 'upcoming'); // par défaut, 'à venir'
-        $statut = $request->get('statut');
-        $search = $request->get('search');
-        $sort = $request->get('sort', 'date_heure');
-
+        $user = Auth::user();
         $query = RendezVous::with(['user', 'prestation']);
 
-        if ($filtre === 'upcoming') {
-            $query->where('date_heure', '>=', $now);
-        } elseif ($filtre === 'past') {
-            $query->where('date_heure', '<', $now);
-        }
-
-        if ($statut && $statut !== 'all') {
-            $query->where('statut', $statut);
-        }
-
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
-                    ->orWhere('guest_name', 'like', "%{$search}%");
+        // Si l'utilisateur n'est pas admin, filtrer uniquement ses rendez-vous
+        if ($user->role !== 'admin') {
+            $query->where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('guest_email', $user->email);
             });
         }
 
-        $rendezVous = $query->orderBy($sort)->get();
+        // Récupérer tous les rendez-vous (le filtrage se fera côté front)
+        $rendezVous = $query->orderBy('date_heure', 'desc')->get();
 
-        return view('rendezvous.index', compact('rendezVous', 'filtre', 'statut', 'search', 'sort'));
+        return view('rendezvous.index', compact('rendezVous'));
     }
 
 
@@ -331,8 +319,170 @@ class RendezVousController extends Controller
         ]);
     }
 
+    /**
+     * Affiche le formulaire annexe pour créer un rendez-vous rapidement
+     */
+    public function createAnnexe()
+    {
+        $prestations = Prestation::all();
+        $garages = Garage::all();
 
+        // Génération des 30 prochains jours
+        $availableDays = [];
+        for ($i = 0; $i < 30; $i++) {
+            $date = Carbon::now()->addDays($i);
+            $availableDays[] = [
+                'formatted' => $date->translatedFormat('l d F Y'),
+                'value' => $date->toDateString(),
+            ];
+        }
 
+        // Créneaux horaires disponibles (9h-17h)
+        $timeSlots = [];
+        $startTime = Carbon::createFromTime(9, 0);
+        $endTime = Carbon::createFromTime(17, 0);
+        while ($startTime < $endTime) {
+            $timeSlots[] = $startTime->format('H:i');
+            $startTime->addMinutes(30);
+        }
 
+        return view('rendezvous.create-annexe', compact('prestations', 'garages', 'availableDays', 'timeSlots'));
+    }
+
+    /**
+     * Enregistre un rendez-vous créé via le formulaire annexe
+     */
+    public function storeAnnexe(Request $request)
+    {
+        $validated = $request->validate([
+            'prestations' => 'required|array|min:1',
+            'prestations.*.description' => 'required|string|max:255',
+            'prestations.*.montant' => 'nullable|numeric|min:0',
+            'date' => 'required|date',
+            'time' => 'required',
+            'guest_name' => 'required|string|max:255',
+            'guest_email' => 'nullable|email|max:255',
+            'guest_phone' => 'nullable|string|max:20',
+            'type_de_voiture' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        // Créer la date complète
+        $dateHeure = Carbon::parse($validated['date'] . ' ' . $validated['time']);
+
+        // Calculer le tarif total
+        $tarifTotal = 0;
+        foreach ($validated['prestations'] as $prestation) {
+            $tarifTotal += $prestation['montant'] ?? 0;
+        }
+
+        // Créer une description combinée des prestations
+        $prestationsDescriptions = array_column($validated['prestations'], 'description');
+        $prestationLibre = implode(' + ', $prestationsDescriptions);
+
+        // Créer le rendez-vous
+        $rendezVous = RendezVous::create([
+            'prestation_id' => null, // Pas de prestation prédéfinie
+            'garage_id' => null, // Pas de garage
+            'date_heure' => $dateHeure,
+            'guest_name' => $validated['guest_name'],
+            'guest_email' => $validated['guest_email'],
+            'guest_phone' => $validated['guest_phone'],
+            'type_de_voiture' => $validated['type_de_voiture'],
+            'tarif' => $tarifTotal,
+            'statut' => 'confirmé',
+            'notes' => $validated['notes'] ?? null,
+            'prestation_libre' => $prestationLibre, // Description combinée
+        ]);
+
+        // Créer l'événement dans le calendrier seulement si c'est futur
+        if ($dateHeure->isFuture()) {
+            Event::create([
+                'title' => $prestationLibre . ' - ' . $validated['guest_name'],
+                'start' => $dateHeure,
+                'end' => $dateHeure->copy()->addHours(1),
+                'color' => '#10b981',
+            ]);
+        }
+
+        return redirect()->route('rendezvous.index')->with('success', 'Rendez-vous créé avec succès via le formulaire annexe.');
+    }
+
+    /**
+     * Génère une facture PDF pour un rendez-vous avec prestations libres
+     */
+    public function facturePdf($id)
+    {
+        $rendezVous = RendezVous::findOrFail($id);
+
+        // Vérifier que c'est un RDV avec prestations libres
+        if (!$rendezVous->prestation_libre) {
+            return redirect()->back()->with('error', 'Ce rendez-vous ne dispose pas de prestations libres.');
+        }
+
+        // Récupération des paramètres légaux
+        $legal_emetteur = \App\Models\Setting::getValue('legal_emetteur', 'ND');
+        $legal_siret = \App\Models\Setting::getValue('legal_siret', 'ND');
+        $legal_iban = \App\Models\Setting::getValue('legal_iban', 'ND');
+
+        // Séparer les prestations par le "+"
+        $prestations = array_map('trim', explode('+', $rendezVous->prestation_libre));
+
+        $pdf = Pdf::loadView('rendezvous.facture-prestations', compact('rendezVous', 'prestations', 'legal_emetteur', 'legal_siret', 'legal_iban'))
+            ->setPaper('A4');
+        $rendezVousName = $rendezVous->guest_name ?: $rendezVous->user->name ?? 'Client invité';
+        return $pdf->stream("Facture-RDV-{$rendezVousName}.pdf");
+    }
+
+    /**
+     * Envoie une facture par email pour un rendez-vous avec prestations libres
+     */
+    public function envoyerFactureEmail(Request $request)
+    {
+        $request->validate([
+            'rdv_id' => 'required|exists:rendez_vous,id',
+            'email_destinataire' => 'required|email'
+        ]);
+
+        $rendezVous = RendezVous::findOrFail($request->rdv_id);
+
+        // Vérifier que c'est un RDV avec prestations libres
+        if (!$rendezVous->prestation_libre) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce rendez-vous ne dispose pas de prestations libres.'
+            ]);
+        }
+
+        try {
+            // Récupération des paramètres légaux
+            $legal_emetteur = \App\Models\Setting::getValue('legal_emetteur', 'B-CLEAN - 123 rue du Soin Auto, 75000 Paris');
+            $legal_siret = \App\Models\Setting::getValue('legal_siret', '123 456 789 00021');
+            $legal_iban = \App\Models\Setting::getValue('legal_iban', 'FR76 3000 6000 0112 3456 7890 189');
+
+            // Séparer les prestations par le "+"
+            $prestations = array_map('trim', explode('+', $rendezVous->prestation_libre));
+
+            // Génération du PDF
+            $pdf = Pdf::loadView('rendezvous.facture-prestations', compact('rendezVous', 'prestations', 'legal_emetteur', 'legal_siret', 'legal_iban'))
+                ->setPaper('A4');
+
+            $pdfContent = $pdf->output();
+
+            // Envoi de l'email
+            Mail::to($request->email_destinataire)->send(new \App\Mail\FactureRendezVousMail($rendezVous, $pdfContent));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Facture envoyée avec succès à ' . $request->email_destinataire
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'envoi : ' . $e->getMessage()
+            ]);
+        }
+    }
 
 }

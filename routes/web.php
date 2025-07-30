@@ -102,6 +102,8 @@ Route::resource('prestations', PrestationController::class);
 
 // 🔹 Routes publiques pour la gestion des rendez-vous
 Route::get('/rendezvous/create', WizardRendezVous::class)->name('rendezvous.create');
+Route::get('/rendezvous/create-annexe', [RendezVousController::class, 'createAnnexe'])->name('rendezvous.create-annexe');
+Route::post('/rendezvous/store-annexe', [RendezVousController::class, 'storeAnnexe'])->name('rendezvous.store-annexe');
 Route::get('/rendezvous/{id}', [RendezVousController::class, 'showwithid'])->name('rendezvous.show')->middleware('auth');
 
 
@@ -180,8 +182,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/reservations-garage/{id}', [GarageReservationController::class, 'update'])->name('garage-reservations.update');
     Route::get('/reservations-garage/{id}/facture', [GarageReservationController::class, 'facture'])->name('garage-reservations.facture');
     Route::post('/reservations-garage/{id}/envoyer-facture', [GarageReservationController::class, 'envoyerFacture'])->name('garage-reservations.envoyer-facture');
-
-
+    Route::get('/rendezvous/{id}/facture-pdf', [RendezVousController::class, 'facturePdf'])->name('rendezvous.facture-pdf');
+    Route::post('/rendezvous/envoyer-facture-email', [RendezVousController::class, 'envoyerFactureEmail'])->name('rendezvous.envoyer-facture-email');
 
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
