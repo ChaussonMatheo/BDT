@@ -44,7 +44,6 @@
                     <li><a href="{{ route('garages.index') }}"><i class="fas fa-warehouse"></i> Garages</a></li>
                     <li><a href="{{ route('admin.users') }}"><i class="fas fa-users-cog"></i> Gestion des utilisateurs</a></li>
                     <li><a href="{{ route('availabilities.index') }}"><i class="fas fa-clock"></i> Disponibilités</a></li>
-                    <li><a href="{{ route('admin.uploads.index') }}"><i class="fas fa-image"></i> Images</a></li>
                     <li><a href="{{ route('settings.index') }}"><i class="fas fa-gear"></i> Paramètres</a></li>
                 </div>
 
