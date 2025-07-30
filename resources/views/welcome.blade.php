@@ -73,7 +73,7 @@
         <!-- Présentation -->
         <section class="container mx-auto my-16 text-center px-6">
             <h2 class="text-4xl font-bold">Notre Expertise</h2>
-            <p class="mt-4 text-lg">BDT est spécialisé dans le detailing automobile, proposant des services de nettoyage et protection haut de gamme.</p>
+            <p class="mt-4 text-lg">B-CLEAN est spécialisé dans le detailing automobile, proposant des services de nettoyage et protection haut de gamme.</p>
         </section>
 
         <!-- Tableau des Prix -->
@@ -109,48 +109,59 @@
             </div>
         </section>
 
-
-        <!-- Galerie Avant/Après -->
+        <!-- Galerie Avant/Après avec BeerSlider -->
         <section class="container mx-auto my-16 px-6">
             <h2 class="text-4xl font-bold text-center text-black-600">Nos Réalisations</h2>
 
+            @php
+                function homeImage($images, $position) {
+                    return $images->where('home_position', $position)->first();
+                }
+            @endphp
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
 
+                @if (($img1 = homeImage($homeImages, 1)) && ($img2 = homeImage($homeImages, 2)))
+                    <div class="relative w-full aspect-[16/9]">
+                        <div class="beer-slider" data-beer-label="Avant">
+                            <img src="{{ asset('storage/' . $img1->path) }}" alt="Avant {{ $img1->name }}" class="object-cover w-full h-full" />
+                            <div class="beer-reveal" data-beer-label="Après">
+                                <img src="{{ asset('storage/' . $img2->path) }}" alt="Après {{ $img2->name }}" class="object-cover w-full h-full" />
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-                <div class="diff aspect-[16/9] shadow-lg rounded-lg overflow-hidden">
-                    <div class="diff-item-1">
-                        <img alt="Avant" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a.webp" />
+                @if (($img3 = homeImage($homeImages, 3)) && ($img4 = homeImage($homeImages, 4)))
+                    <div class="relative w-full aspect-[16/9]">
+                        <div class="beer-slider" data-beer-label="Avant">
+                            <img src="{{ asset('storage/' . $img3->path) }}" alt="Avant {{ $img3->name }}" class="object-cover w-full h-full" />
+                            <div class="beer-reveal" data-beer-label="Après">
+                                <img src="{{ asset('storage/' . $img4->path) }}" alt="Après {{ $img4->name }}" class="object-cover w-full h-full" />
+                            </div>
+                        </div>
                     </div>
-                    <div class="diff-item-2">
-                        <img alt="Après" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a-blur.webp" />
-                    </div>
-                    <div class="diff-resizer"></div>
-                </div>
+                @endif
 
-                <!-- Image Avant/Après #2 -->
-                <div class="diff aspect-[16/9] shadow-lg rounded-lg overflow-hidden">
-                    <div class="diff-item-1">
-                        <img alt="Avant" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a.webp" />
+                @if (($img5 = homeImage($homeImages, 5)) && ($img6 = homeImage($homeImages, 6)))
+                    <div class="relative w-full aspect-[16/9]">
+                        <div class="beer-slider" data-beer-label="Après">
+                            <img src="{{ asset('storage/' . $img5->path) }}" alt="Avant {{ $img5->name }}" class="object-cover w-full h-full" />
+                            <div class="beer-reveal" data-beer-label="Avant">
+                                <img src="{{ asset('storage/' . $img6->path) }}" alt="Après {{ $img6->name }}" class="object-cover w-full h-full" />
+                            </div>
+                        </div>
                     </div>
-                    <div class="diff-item-2">
-                        <img alt="Après" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a-blur.webp" />
-                    </div>
-                    <div class="diff-resizer"></div>
-                </div>
-
-                <!-- Image Avant/Après #3 -->
-                <div class="diff aspect-[16/9] shadow-lg rounded-lg overflow-hidden">
-                    <div class="diff-item-1">
-                        <img alt="Avant" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a.webp" />
-                    </div>
-                    <div class="diff-item-2">
-                        <img alt="Après" src="https://img.daisyui.com/images/stock/photo-1560717789-0ac7c58ac90a-blur.webp" />
-                    </div>
-                    <div class="diff-resizer"></div>
-                </div>
+                @endif
 
             </div>
+
+            @if ($homeImages->isEmpty())
+                <p class="text-center text-gray-400 mt-8">Aucune image n’a encore été sélectionnée pour la page d’accueil.</p>
+            @endif
         </section>
+
+
 
 
         <!-- Témoignages Clients -->
@@ -293,8 +304,13 @@
 
 
     </style>
-<script>
 
-</script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".beer-slider").forEach(function (el) {
+                new BeerSlider(el);
+            });
+        });
+    </script>
 
 </x-app-layout>

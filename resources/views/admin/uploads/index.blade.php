@@ -1,4 +1,5 @@
 <x-app-layout>
+
     <div class="max-w-6xl mx-auto px-4 py-10 text-white">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-primary">📂 Liens de dépôt</h1>

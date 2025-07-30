@@ -83,7 +83,12 @@ class GarageReservationController extends Controller
     {
         $reservation = GarageReservation::with(['garage', 'prestations'])->findOrFail($id);
 
-        $pdf = Pdf::loadView('garage_reservations.facture', compact('reservation'))
+        // Récupération des paramètres légaux
+        $legal_emetteur = \App\Models\Setting::getValue('legal_emetteur', 'B-CLEAN - 123 rue du Soin Auto, 75000 Paris');
+        $legal_siret = \App\Models\Setting::getValue('legal_siret', '123 456 789 00021');
+        $legal_iban = \App\Models\Setting::getValue('legal_iban', 'FR76 3000 6000 0112 3456 7890 189');
+
+        $pdf = Pdf::loadView('garage_reservations.facture', compact('reservation', 'legal_emetteur', 'legal_siret', 'legal_iban'))
             ->setPaper('A4');
 
         return $pdf->download("Facture-Garage-{$reservation->id}.pdf");

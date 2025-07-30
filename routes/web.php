@@ -19,6 +19,7 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\HomeController;
 use Laravel\Socialite\Facades\Socialite;
+use App\Http\Controllers\SettingsController;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -70,11 +71,16 @@ Route::get('auth/{provider}/callback', function ($provider) {
 
 Route::prefix('up')->group(function () {
     Route::get('/uploads', [AdminUploadController::class, 'index'])->name('admin.uploads.index');
+    Route::get('/uploads/images', [AdminUploadController::class, 'showimage'])->name('admin.uploads.images');
     Route::get('/uploads/create', [AdminUploadController::class, 'create'])->name('admin.uploads.create');
     Route::post('/uploads', [AdminUploadController::class, 'store'])->name('admin.uploads.store');
     Route::get('/uploads/{upload}', [AdminUploadController::class, 'show'])->name('admin.uploads.show');
     Route::delete('/uploads/{upload}', [AdminUploadController::class, 'destroy'])->name('admin.uploads.destroy');
+    Route::delete('/uploads/image/{image}', [AdminUploadController::class, 'destroyImage'])->name('admin.uploads.destroyImage');
+    Route::post('/uploads/set-home-position/{image}', [AdminUploadController::class, 'setHomePosition'])->name('admin.uploads.setHomePosition');
+
 });
+
 
 // 🔹 Page d'accueil
 route::get("/", [HomeController::class, "index"])->name("home");
@@ -172,3 +178,10 @@ Route::get('/reservations-garage/{id}/facture', [GarageReservationController::cl
 
 // 🔹 Authentification Laravel (register, login, logout)
 require __DIR__.'/auth.php';
+Route::middleware(['auth', 'admin'])->group(function () {
+    // Routes pour la gestion des paramètres
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+});
+
+

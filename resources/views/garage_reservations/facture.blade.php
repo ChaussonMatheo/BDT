@@ -49,7 +49,7 @@
 <!-- Header -->
 <div class="header">
     <img src="{{ public_path('images/BAUDET_LOGO.svg') }}" class="logo" alt="Logo">
-    <div class="title">Facture - Detailling {{ $reservation->garage->nom }}</div>
+    <div class="title">Facture -  {{ $reservation->garage->nom }}</div>
 </div>
 
 <!-- Informations générales -->
@@ -95,9 +95,9 @@
 
 <!-- Informations légales -->
 <div class="legal">
-    <p><strong>Émetteur :</strong> B-CLEAN - 123 rue du Soin Auto, 75000 Paris</p>
-    <p><strong>SIRET :</strong> 123 456 789 00021</p>
-    <p><strong>IBAN :</strong> FR76 3000 6000 0112 3456 7890 189</p>
+    <p><strong>Émetteur :</strong> {{ $legal_emetteur }}</p>
+    <p><strong>SIRET :</strong> {{ $legal_siret }}</p>
+    <p><strong>IBAN :</strong> {{ $legal_iban }}</p>
 </div>
 
 <!-- Footer avec clause -->

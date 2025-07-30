@@ -12,6 +12,12 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+    <script src="
+    https://cdn.jsdelivr.net/npm/beerslider@1.0.3/dist/BeerSlider.min.js
+"></script>
+    <link href="
+    https://cdn.jsdelivr.net/npm/beerslider@1.0.3/dist/BeerSlider.min.css
+" rel="stylesheet">
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -38,7 +44,8 @@
                     <li><a href="{{ route('garages.index') }}"><i class="fas fa-warehouse"></i> Garages</a></li>
                     <li><a href="{{ route('admin.users') }}"><i class="fas fa-users-cog"></i> Gestion des utilisateurs</a></li>
                     <li><a href="{{ route('availabilities.index') }}"><i class="fas fa-clock"></i> Disponibilités</a></li>
-
+                    <li><a href="{{ route('admin.uploads.index') }}"><i class="fas fa-image"></i> Images</a></li>
+                    <li><a href="{{ route('settings.index') }}"><i class="fas fa-gear"></i> Paramètres</a></li>
                 </div>
 
                 <!-- Affichage de la version -->

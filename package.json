@@ -22,6 +22,7 @@
         "@fullcalendar/interaction": "^6.1.15",
         "@fullcalendar/timegrid": "^6.1.15",
         "@tailwindcss/vite": "^4.0.9",
+        "beerslider": "^1.0.3",
         "gsap": "^3.12.7",
         "swiper": "^11.2.4"
     }
